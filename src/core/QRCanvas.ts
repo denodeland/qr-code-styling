@@ -33,11 +33,15 @@ export default class QRCanvas {
   _canvas: HTMLCanvasElement;
   _options: RequiredOptions;
   _qr?: QRCode;
-  _image?: HTMLImageElement;
+  _image?: HTMLImageElement | ImageBitmap;
+  _workerCtx: Worker;
+  _frameImage: ImageBitmap | void;
 
   //TODO don't pass all options to this class
-  constructor(options: RequiredOptions) {
-    this._canvas = document.createElement("canvas");
+  constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap) {
+    this._workerCtx = self as any;
+    this._frameImage = frameImage;
+    this._canvas = canvas;
     options.width = options.width + options.frameOptions.xSize * 2;
     options.height = options.height + options.frameOptions.topSize + options.frameOptions.bottomSize;
     this._canvas.width = options.width;
@@ -55,6 +59,10 @@ export default class QRCanvas {
 
   get height(): number {
     return this._canvas.height;
+  }
+
+  get isWorker(): boolean {
+    return !("document" in this._workerCtx);
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -87,6 +95,7 @@ export default class QRCanvas {
 
     if (this._options.image) {
       await this.loadImage();
+
       if (!this._image) return;
       const { imageOptions, qrOptions } = this._options;
       const coverLevel = imageOptions.imageSize * errorCorrectionPercents[qrOptions.errorCorrectionLevel];
@@ -102,7 +111,6 @@ export default class QRCanvas {
     }
 
     this.clear();
-    this.drawFrame();
     this.drawBackground();
     this.drawDots((i: number, j: number): boolean => {
       if (this._options.imageOptions.hideBackgroundDots) {
@@ -131,17 +139,25 @@ export default class QRCanvas {
     if (this._options.image) {
       this.drawImage({ width: drawImageSize.width, height: drawImageSize.height, count, dotSize });
     }
+
+    this.drawFrame();
   }
 
   drawFrame(): void {
-    const canvasContext = this.context;
+    const canvasContext = this.context as CanvasRenderingContext2D;
     const options = this._options;
     if (canvasContext && options.frameOptions.image) {
-      const img = new Image();
-      img.onload = function () {
-        canvasContext.drawImage(img, 0, 0, options.width, options.height);
-      };
-      img.src = options.frameOptions.image;
+      if (this.isWorker && this._frameImage) {
+        canvasContext.drawImage(this._frameImage, 0, 0, options.width, options.height);
+      }
+
+      if (!this.isWorker) {
+        const img = new Image();
+        img.onload = function () {
+          canvasContext.drawImage((img as unknown) as CanvasImageSource, 0, 0, options.width, options.height);
+        };
+        img.src = options.frameOptions.image;
+      }
     }
   }
 
@@ -387,6 +403,10 @@ export default class QRCanvas {
   }
 
   loadImage(): Promise<void> {
+    if (this.isWorker) {
+      return this.loadImageFromWorker();
+    }
+
     return new Promise((resolve, reject) => {
       const options = this._options;
       const image = new Image();
@@ -405,6 +425,17 @@ export default class QRCanvas {
       };
       image.src = options.image;
     });
+  }
+
+  async loadImageFromWorker(): Promise<void> {
+    if (!this._options.image) return Promise.reject("image is not defined");
+
+    return fetch(this._options.image)
+      .then((r) => r.blob())
+      .then((imgblob) => createImageBitmap(imgblob))
+      .then((img) => {
+        this._image = img;
+      });
   }
 
   drawImage({
@@ -439,7 +470,7 @@ export default class QRCanvas {
     const dw = width - options.imageOptions.margin * 2;
     const dh = height - options.imageOptions.margin * 2;
 
-    canvasContext.drawImage(this._image, dx, dy, dw < 0 ? 0 : dw, dh < 0 ? 0 : dh);
+    canvasContext.drawImage((this._image as unknown) as CanvasImageSource, dx, dy, dw < 0 ? 0 : dw, dh < 0 ? 0 : dh);
   }
 
   fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void {

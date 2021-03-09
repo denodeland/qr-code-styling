@@ -16,7 +16,16 @@
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "typeRoots": [
+            "src/types/worker-loader.d.ts",
+            "node_modules/@types"
+        ],
+        "lib": [
+            "webworker",
+            "es6",
+            "dom"
+        ]
     },
     "include": ["./src/**/*"]
 }

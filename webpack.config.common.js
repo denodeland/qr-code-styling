@@ -26,6 +26,18 @@ module.exports = {
         test: /\.ts$/,
         loader: "eslint-loader",
         exclude: /node_modules/
+      },
+      {
+        test: /\.worker\.ts$/,
+        use: [
+          {
+            loader: "worker-loader",
+            options: { filename: "[name].[chunkhash].js" }
+          },
+          {
+            loader: "ts-loader"
+          }
+        ]
       }
     ]
   },

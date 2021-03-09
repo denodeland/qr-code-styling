@@ -5,11 +5,14 @@ export default class QRCanvas {
     _canvas: HTMLCanvasElement;
     _options: RequiredOptions;
     _qr?: QRCode;
-    _image?: HTMLImageElement;
-    constructor(options: RequiredOptions);
+    _image?: HTMLImageElement | ImageBitmap;
+    _workerCtx: Worker;
+    _frameImage: ImageBitmap | void;
+    constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap);
     get context(): CanvasRenderingContext2D | null;
     get width(): number;
     get height(): number;
+    get isWorker(): boolean;
     getCanvas(): HTMLCanvasElement;
     clear(): void;
     drawQR(qr: QRCode): Promise<void>;
@@ -18,6 +21,7 @@ export default class QRCanvas {
     drawDots(filter?: FilterFunction): void;
     drawCorners(filter?: FilterFunction): void;
     loadImage(): Promise<void>;
+    loadImageFromWorker(): Promise<void>;
     drawImage({ width, height, count, dotSize }: {
         width: number;
         height: number;

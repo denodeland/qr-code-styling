@@ -49,6 +49,7 @@ export interface RequiredOptions extends Options {
     margin: number;
     borderRadius: number;
     data: string;
+    offscreen: boolean;
     qrOptions: {
         typeNumber: TypeNumber;
         mode?: Mode;

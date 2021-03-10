@@ -97,7 +97,7 @@ const defaultOptions: RequiredOptions = {
   data: "",
   margin: 0,
   borderRadius: 0,
-  offscreen: true,
+  offscreen: false,
   qrOptions: {
     typeNumber: qrTypes[0],
     mode: undefined,

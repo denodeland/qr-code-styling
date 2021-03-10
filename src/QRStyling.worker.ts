@@ -4,12 +4,9 @@ import getMode from "./tools/getMode";
 
 const workerCtx: Worker = self as any;
 
-console.log(self.location);
-
 // Respond to message from parent thread
 workerCtx.addEventListener("message", async ({ data }) => {
   if (data.key === "initCanvas") {
-    console.log("init Canvas", data.id);
     const { options, frameImage, id } = data;
 
     const canvas = new QRCanvas(data.options, data.canvas, frameImage);

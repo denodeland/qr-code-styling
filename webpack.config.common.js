@@ -32,7 +32,7 @@ module.exports = {
         use: [
           {
             loader: "worker-loader",
-            options: { filename: "[name].[chunkhash].js" }
+            options: { filename: "qr-code-styling.worker.[chunkhash].js" }
           },
           {
             loader: "ts-loader"

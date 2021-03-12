@@ -17,9 +17,7 @@ workerCtx.addEventListener("message", async ({ data }) => {
 
     await canvas.drawQR(qr);
 
-    setTimeout(() => {
-      workerCtx.postMessage({ key: "drawingEnded", id });
-    }, 500);
+    workerCtx.postMessage({ key: "drawingEnded", id });
   }
 });
 

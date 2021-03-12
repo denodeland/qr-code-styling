@@ -35,7 +35,7 @@ export default class QRCanvas {
   _qr?: QRCode;
   _image?: HTMLImageElement | ImageBitmap;
   _workerCtx: Worker;
-  _frameImage: ImageBitmap | void;
+  _frameImage: ImageBitmap | HTMLImageElement | void;
 
   //TODO don't pass all options to this class
   constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap) {
@@ -93,9 +93,9 @@ export default class QRCanvas {
 
     this._qr = qr;
 
-    if (this._options.image) {
-      await this.loadImage();
+    await this.loadAssets();
 
+    if (this._options.image) {
       if (!this._image) return;
       const { imageOptions, qrOptions } = this._options;
       const coverLevel = imageOptions.imageSize * errorCorrectionPercents[qrOptions.errorCorrectionLevel];
@@ -143,21 +143,28 @@ export default class QRCanvas {
     this.drawFrame();
   }
 
+  loadFrameImage(): Promise<void> {
+    if (this.isWorker) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const options = this._options;
+      const image = new Image();
+
+      this._frameImage = image;
+      image.onload = (): void => {
+        resolve();
+      };
+      image.src = options.frameOptions.image;
+    });
+  }
+
   drawFrame(): void {
     const canvasContext = this.context as CanvasRenderingContext2D;
     const options = this._options;
-    if (canvasContext && options.frameOptions.image) {
-      if (this.isWorker && this._frameImage) {
-        canvasContext.drawImage(this._frameImage, 0, 0, options.width, options.height);
-      }
-
-      if (!this.isWorker) {
-        const img = new Image();
-        img.onload = function () {
-          canvasContext.drawImage((img as unknown) as CanvasImageSource, 0, 0, options.width, options.height);
-        };
-        img.src = options.frameOptions.image;
-      }
+    if (canvasContext && options.frameOptions.image && this._frameImage) {
+      canvasContext.drawImage((this._frameImage as unknown) as CanvasImageSource, 0, 0, options.width, options.height);
     }
   }
 
@@ -400,6 +407,20 @@ export default class QRCanvas {
 
       canvasContext.fill("evenodd");
     });
+  }
+
+  loadAssets(): Promise<void[]> {
+    const promises = [];
+
+    if (this._options.image) {
+      promises.push(this.loadImage());
+    }
+
+    if (this._options.frameOptions.image) {
+      promises.push(this.loadFrameImage());
+    }
+
+    return Promise.all(promises);
   }
 
   loadImage(): Promise<void> {

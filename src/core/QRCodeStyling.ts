@@ -28,10 +28,11 @@ export default class QRCodeStyling {
   _started: boolean;
   _resolveDrawingEnded?: () => void;
 
-  constructor(options?: Partial<Options>) {
+  constructor(options: Partial<Options>, container: HTMLElement) {
     this._options = options ? sanitizeOptions(mergeDeep(defaultOptions, options) as RequiredOptions) : defaultOptions;
     this._id = id++;
     this._started = false;
+    this._container = container;
     this.update();
   }
 
@@ -51,13 +52,13 @@ export default class QRCodeStyling {
 
     this._canvas = document.createElement("canvas");
 
+    this.append(this._container);
+
     if (this._options.offscreen && "OffscreenCanvas" in window && "createImageBitmap" in window) {
       this.drawQRFromWorker();
     } else {
       this.drawQR();
     }
-
-    this.append(this._container);
   }
 
   drawQR(): void {
@@ -79,13 +80,13 @@ export default class QRCodeStyling {
 
       const img = new Image();
       img.onload = function () {
-        resolve(
-          createImageBitmap((img as unknown) as ImageBitmapSource, {
-            resizeWidth: width * 2,
-            resizeHeight: height * 2,
-            resizeQuality: "high"
-          })
-        );
+        createImageBitmap((img as unknown) as ImageBitmapSource, {
+          resizeWidth: width * 2,
+          resizeHeight: height * 2,
+          resizeQuality: "high"
+        })
+          .then(resolve)
+          .catch(console.log);
       };
 
       img.src = this._options.frameOptions.image;
@@ -107,10 +108,10 @@ export default class QRCodeStyling {
       this._resolveDrawingEnded = resolve;
     });
 
-    const offscreen = this._canvas.transferControlToOffscreen();
     const frameImage = await this.getFrameImage();
+    const offscreen = this._canvas.transferControlToOffscreen();
 
-    worker.postMessage({ key: "initCanvas", canvas: offscreen, options: this._options, frameImage, id: this._id }, [
+    worker.postMessage({ key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage }, [
       offscreen
     ]);
   }

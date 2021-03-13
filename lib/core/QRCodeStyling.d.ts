@@ -13,13 +13,21 @@ export default class QRCodeStyling {
     _id: number;
     _started: boolean;
     _resolveDrawingEnded?: () => void;
-    constructor(options?: Partial<Options>);
+    _retryCount: number;
+    constructor(options: Partial<Options>, container: HTMLElement);
     static _clearContainer(container?: HTMLElement): void;
     update(options?: Partial<Options>): void;
     drawQR(): void;
     getFrameImage(): Promise<ImageBitmap | void>;
+    handleWorkerMessage(event: {
+        data: {
+            id: number;
+            key: string;
+        };
+    }): void;
     drawQRFromWorker(): Promise<void>;
     append(container?: HTMLElement): void;
     download(downloadOptions?: Partial<DownloadOptions> | string): void;
+    clear(): void;
 }
 export {};

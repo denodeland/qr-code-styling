@@ -27,12 +27,15 @@ export default class QRCodeStyling {
   _id: number;
   _started: boolean;
   _resolveDrawingEnded?: () => void;
+  _retryCount = 0;
 
   constructor(options: Partial<Options>, container: HTMLElement) {
     this._options = options ? sanitizeOptions(mergeDeep(defaultOptions, options) as RequiredOptions) : defaultOptions;
     this._id = id++;
     this._started = false;
     this._container = container;
+    this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
+    this.clear = this.clear.bind(this);
     this.update();
   }
 
@@ -93,16 +96,24 @@ export default class QRCodeStyling {
     });
   }
 
+  handleWorkerMessage(event: { data: { id: number; key: string } }): void {
+    if (event.data.key === "drawingEnded" && event.data.id === this._id) {
+      if (this._canvas && this._canvas.width === 10 && this._retryCount === 0) {
+        this._retryCount++;
+        this.update();
+      } else if (this._resolveDrawingEnded) this._resolveDrawingEnded();
+    }
+  }
+
   async drawQRFromWorker(): Promise<void> {
     if (!this._canvas) return;
     if (!this._started) {
       this._started = true;
-      worker.addEventListener("message", (event: { data: { id: number; key: string } }) => {
-        if (event.data.key === "drawingEnded" && event.data.id === this._id) {
-          if (this._resolveDrawingEnded) this._resolveDrawingEnded();
-        }
-      });
+      worker.addEventListener("message", this.handleWorkerMessage);
     }
+
+    // initial width for checking if the canvas was properly initialized
+    this._canvas.width = 10;
 
     this._drawingPromise = new Promise((resolve) => {
       this._resolveDrawingEnded = resolve;
@@ -159,5 +170,9 @@ export default class QRCodeStyling {
       const data = this._canvas.toDataURL(`image/${extension}`);
       downloadURI(data, `${name}.${extension}`);
     });
+  }
+
+  clear(): void {
+    worker.removeEventListener("message", this.handleWorkerMessage);
   }
 }

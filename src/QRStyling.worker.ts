@@ -4,7 +4,6 @@ import getMode from "./tools/getMode";
 
 const workerCtx: Worker = self as any;
 
-// Respond to message from parent thread
 workerCtx.addEventListener("message", async ({ data }) => {
   if (data.key === "initCanvas") {
     const { options, frameImage, id } = data;
@@ -17,7 +16,10 @@ workerCtx.addEventListener("message", async ({ data }) => {
 
     await canvas.drawQR(qr);
 
-    workerCtx.postMessage({ key: "drawingEnded", id });
+    // this delay is for waiting dom canvas sync
+    setTimeout(() => {
+      workerCtx.postMessage({ key: "drawingEnded", id });
+    }, 100);
   }
 });
 

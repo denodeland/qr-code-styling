@@ -26,6 +26,7 @@ export default class QRCodeStyling {
   _drawingPromise?: Promise<void>;
   _id: number;
   _started: boolean;
+  _resolveFrame: (image: void | ImageBitmap | null) => void;
   _resolveDrawingEnded?: () => void;
   _retryCount = 0;
 
@@ -36,6 +37,7 @@ export default class QRCodeStyling {
     this._container = container;
     this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
     this.clear = this.clear.bind(this);
+    this._resolveFrame = () => null;
     this.update();
   }
 
@@ -75,8 +77,9 @@ export default class QRCodeStyling {
     this._drawingPromise = qrCanvas.drawQR(this._qr);
   }
 
-  getFrameImage(): Promise<ImageBitmap | void> {
+  getFrameImage(): Promise<ImageBitmap | void | null> {
     return new Promise((resolve) => {
+      this._resolveFrame = resolve;
       if (!this._options.frameOptions.image) resolve(undefined);
       const width = this._options.width + this._options.frameOptions.xSize * 2;
       const height = this._options.height + this._options.frameOptions.topSize + this._options.frameOptions.bottomSize;
@@ -119,12 +122,18 @@ export default class QRCodeStyling {
       this._resolveDrawingEnded = resolve;
     });
 
+    // previous getFrame
+    this._resolveFrame(null);
     const frameImage = await this.getFrameImage();
-    const offscreen = this._canvas.transferControlToOffscreen();
 
-    worker.postMessage({ key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage }, [
-      offscreen
-    ]);
+    // ignore previous postMessage
+    if (frameImage !== null) {
+      const offscreen = this._canvas.transferControlToOffscreen();
+
+      worker.postMessage({ key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage }, [
+        offscreen
+      ]);
+    }
   }
 
   append(container?: HTMLElement): void {

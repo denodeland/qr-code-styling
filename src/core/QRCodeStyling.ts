@@ -118,9 +118,11 @@ export default class QRCodeStyling {
     // initial width for checking if the canvas was properly initialized
     this._canvas.width = 10;
 
-    this._drawingPromise = new Promise((resolve) => {
-      this._resolveDrawingEnded = resolve;
-    });
+    if (!this._drawingPromise) {
+      this._drawingPromise = new Promise((resolve) => {
+        this._resolveDrawingEnded = resolve;
+      });
+    }
 
     // previous getFrame
     this._resolveFrame(null);

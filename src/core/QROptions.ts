@@ -1,4 +1,5 @@
 import qrTypes from "../constants/qrTypes";
+import drawTypes from "../constants/drawTypes";
 import errorCorrectionLevels from "../constants/errorCorrectionLevels";
 import {
   DotType,
@@ -7,7 +8,8 @@ import {
   CornerDotType,
   TypeNumber,
   ErrorCorrectionLevel,
-  Mode
+  Mode,
+  DrawType
 } from "../types";
 
 export type Gradient = {
@@ -74,6 +76,7 @@ export interface FrameOptions {
 }
 
 export interface RequiredOptions extends Options {
+  type: DrawType;
   width: number;
   height: number;
   margin: number;
@@ -104,6 +107,7 @@ export interface RequiredOptions extends Options {
 }
 
 const defaultOptions: RequiredOptions = {
+  type: drawTypes.canvas,
   width: 300,
   height: 300,
   data: "",

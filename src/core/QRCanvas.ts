@@ -1,8 +1,8 @@
 import calculateImageSize from "../tools/calculateImageSize";
 import errorCorrectionPercents from "../constants/errorCorrectionPercents";
-import QRDot from "./QRDot";
-import QRCornerSquare from "./QRCornerSquare";
-import QRCornerDot from "./QRCornerDot";
+import QRDot from "../figures/dot/canvas/QRDot";
+import QRCornerSquare from "../figures/cornerSquare/canvas/QRCornerSquare";
+import QRCornerDot from "../figures/cornerDot/canvas/QRCornerDot";
 import { RequiredOptions, FrameOptions, CreateGradientOptions } from "./QROptions";
 import gradientTypes from "../constants/gradientTypes";
 import { QRCode } from "../types";

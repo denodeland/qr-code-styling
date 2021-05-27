@@ -3,6 +3,8 @@ import mergeDeep from "../tools/merge";
 import downloadURI from "../tools/downloadURI";
 import QRCanvas from "./QRCanvas";
 import defaultOptions, { Options, RequiredOptions, FrameOptions } from "./QROptions";
+import QRSVG from "./QRSVG";
+import drawTypes from "../constants/drawTypes";
 import sanitizeOptions from "../tools/sanitizeOptions";
 import { Extension, QRCode } from "../types";
 import qrcode from "qrcode-generator";
@@ -30,6 +32,7 @@ export default class QRCodeStyling {
   _options: RequiredOptions;
   _container?: HTMLElement;
   _canvas?: HTMLCanvasElement;
+  _svg?: QRSVG;
   _qr?: QRCode;
   _drawingPromise?: Promise<void>;
   _id: number;
@@ -93,6 +96,10 @@ export default class QRCodeStyling {
       return;
     }
 
+    if (this._options.type === drawTypes.svg) {
+      return this.drawSvgQR();
+    }
+
     this._canvas = document.createElement("canvas");
 
     this.append(this._container);
@@ -117,6 +124,17 @@ export default class QRCodeStyling {
     } else {
       qrCanvas.drawQR(this._qr).then(this._resolveDrawingEnded, this._rejectDrawingEnded);
     }
+  }
+
+  drawSvgQR(): void {
+    this._qr = qrcode(this._options.qrOptions.typeNumber, this._options.qrOptions.errorCorrectionLevel);
+    this._qr.addData(this._options.data, this._options.qrOptions.mode || getMode(this._options.data));
+    this._qr.make();
+
+    this._svg = new QRSVG(this._options);
+    this.append(this._container);
+
+    this._drawingPromise = this._svg.drawQR(this._qr);
   }
 
   getImage(image: string, width: number, height: number): Promise<ImageBitmap | void> {
@@ -230,19 +248,23 @@ export default class QRCodeStyling {
       throw "Container should be a single DOM node";
     }
 
-    if (this._canvas) {
-      container.appendChild(this._canvas);
-    }
+    if (this._options.type === drawTypes.canvas) {
+      if (this._canvas) {
+        container.appendChild(this._canvas);
+      }
+    } else {
+      if (this._svg) {
+        container.appendChild(this._svg.getElement());
+      }
 
-    this._container = container;
+      this._container = container;
+    }
   }
 
   download(downloadOptions?: Partial<DownloadOptions> | string): void {
     if (!this._drawingPromise) return;
 
     this._drawingPromise.then(() => {
-      if (!this._canvas) return;
-
       let extension = "png";
       let name = "qr";
 
@@ -261,8 +283,22 @@ export default class QRCodeStyling {
         }
       }
 
-      const data = this._canvas.toDataURL(`image/${extension}`);
-      downloadURI(data, `${name}.${extension}`);
+      if (this._options.type === drawTypes.canvas) {
+        if (!this._canvas) return;
+
+        const data = this._canvas.toDataURL(`image/${extension}`);
+        downloadURI(data, `${name}.${extension}`);
+      } else {
+        if (!this._svg) return;
+
+        //get svg source.
+        const serializer = new XMLSerializer();
+        let source = serializer.serializeToString(this._svg.getElement());
+
+        source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+        const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+        downloadURI(url, `${name}.svg`);
+      }
     });
   }
 

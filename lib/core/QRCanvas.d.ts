@@ -18,6 +18,7 @@ export default class QRCanvas {
     drawQR(qr: QRCode): Promise<void>;
     loadFrameImage(): Promise<void>;
     drawFrame(): void;
+    drawFrameBackground(): void;
     drawBackground(): void;
     drawDots(filter?: FilterFunction): void;
     drawCorners(filter?: FilterFunction): void;

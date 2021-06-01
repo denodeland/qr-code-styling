@@ -75,6 +75,7 @@ export interface RequiredOptions extends Options {
         topSize: number;
         bottomSize: number;
         image: string;
+        backgroundColor: string;
     };
 }
 declare const defaultOptions: RequiredOptions;

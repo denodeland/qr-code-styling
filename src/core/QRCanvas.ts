@@ -111,6 +111,7 @@ export default class QRCanvas {
     }
 
     this.clear();
+    this.drawFrameBackground();
     this.drawBackground();
     this.drawDots((i: number, j: number): boolean => {
       if (this._options.imageOptions.hideBackgroundDots) {
@@ -165,6 +166,17 @@ export default class QRCanvas {
     const options = this._options;
     if (canvasContext && options.frameOptions.image && this._frameImage) {
       canvasContext.drawImage((this._frameImage as unknown) as CanvasImageSource, 0, 0, options.width, options.height);
+    }
+  }
+
+  drawFrameBackground(): void {
+    const canvasContext = this.context;
+    const options = this._options;
+
+    if (canvasContext && options.frameOptions.backgroundColor) {
+      canvasContext.fillStyle = options.frameOptions.backgroundColor;
+
+      this.fillRoundRect(0, 0, this._canvas.width, this._canvas.height, options.borderRadius);
     }
   }
 

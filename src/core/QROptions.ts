@@ -88,6 +88,7 @@ export interface RequiredOptions extends Options {
     topSize: number;
     bottomSize: number;
     image: string;
+    backgroundColor: string;
   };
 }
 
@@ -120,7 +121,8 @@ const defaultOptions: RequiredOptions = {
     xSize: 0,
     topSize: 0,
     bottomSize: 0,
-    image: ""
+    image: "",
+    backgroundColor: ""
   }
 };
 

@@ -14,12 +14,15 @@ workerCtx.addEventListener("message", async ({ data }) => {
     qr.addData(options.data, options.qrOptions.mode || getMode(options.data));
     qr.make();
 
-    await canvas.drawQR(qr);
-
-    // this delay is for waiting dom canvas sync
-    setTimeout(() => {
-      workerCtx.postMessage({ key: "drawingEnded", id });
-    }, 100);
+    try {
+      await canvas.drawQR(qr);
+      // this delay is for waiting dom canvas sync
+      setTimeout(() => {
+        workerCtx.postMessage({ key: "drawingEnded", id });
+      }, 100);
+    } catch (error) {
+      workerCtx.postMessage({ key: "error", id, error });
+    }
   }
 });
 

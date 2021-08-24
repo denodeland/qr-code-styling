@@ -28,6 +28,7 @@ export default class QRCodeStyling {
   _started: boolean;
   _resolveFrame: (image: void | ImageBitmap | null) => void;
   _resolveDrawingEnded?: () => void;
+  _rejectDrawingEnded?: (error: Error | undefined) => void;
   _retryCount = 0;
 
   constructor(options: Partial<Options>, container: HTMLElement) {
@@ -99,12 +100,15 @@ export default class QRCodeStyling {
     });
   }
 
-  handleWorkerMessage(event: { data: { id: number; key: string } }): void {
+  handleWorkerMessage(event: { data: { id: number; key: string; error?: Error } }): void {
     if (event.data.key === "drawingEnded" && event.data.id === this._id) {
       if (this._canvas && this._canvas.width === 10 && this._retryCount === 0) {
         this._retryCount++;
         this.update();
       } else if (this._resolveDrawingEnded) this._resolveDrawingEnded();
+    }
+    if (event.data.key === "error" && this._rejectDrawingEnded && event.data.id === this._id) {
+      this._rejectDrawingEnded(event.data.error);
     }
   }
 
@@ -119,8 +123,9 @@ export default class QRCodeStyling {
     this._canvas.width = 10;
 
     if (!this._drawingPromise) {
-      this._drawingPromise = new Promise((resolve) => {
+      this._drawingPromise = new Promise((resolve, reject) => {
         this._resolveDrawingEnded = resolve;
+        this._rejectDrawingEnded = reject;
       });
     }
 

@@ -26,7 +26,7 @@ export default class QRCodeStyling {
   _drawingPromise?: Promise<void>;
   _id: number;
   _started: boolean;
-  _resolveFrame: (image: void | ImageBitmap | null) => void;
+  _resolveImages: (image: void[] | ImageBitmap[] | null) => void;
   _resolveDrawingEnded?: () => void;
   _rejectDrawingEnded?: (error: Error | undefined) => void;
   _retryCount = 0;
@@ -38,7 +38,7 @@ export default class QRCodeStyling {
     this._container = container;
     this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
     this.clear = this.clear.bind(this);
-    this._resolveFrame = () => null;
+    this._resolveImages = () => null;
     this.update();
   }
 
@@ -78,10 +78,48 @@ export default class QRCodeStyling {
     this._drawingPromise = qrCanvas.drawQR(this._qr);
   }
 
+  getImage(image: string, width: number, height: number): Promise<ImageBitmap | void> {
+    return new Promise((resolve) => {
+      if (!image) return resolve(undefined);
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function () {
+        const widthRel = img.width / width;
+
+        createImageBitmap((img as unknown) as ImageBitmapSource, {
+          resizeWidth: width,
+          resizeHeight: height || img.height / widthRel,
+          resizeQuality: "high"
+        })
+          .then(resolve)
+          .catch(console.log);
+      };
+
+      img.src = image;
+    });
+  }
+
+  getImages(): Promise<(ImageBitmap | void)[] | null> {
+    return new Promise((resolve) => {
+      this._resolveImages = resolve;
+      const frameImagePromise = this.getImage(
+        this._options.frameOptions.image,
+        this._options.width + this._options.frameOptions.xSize * 2,
+        this._options.height + this._options.frameOptions.topSize + this._options.frameOptions.bottomSize
+      );
+
+      // only creates the ImageBitmap when the image is an svg
+      const qrImage = /\.svg$/.test(this._options.image || "") ? this._options.image : "";
+      const qrImagePromise = this.getImage(qrImage || "", this._options.width / 2, 0);
+
+      Promise.all([frameImagePromise, qrImagePromise]).then(resolve);
+    });
+  }
+
   getFrameImage(): Promise<ImageBitmap | void | null> {
     return new Promise((resolve) => {
-      this._resolveFrame = resolve;
-      if (!this._options.frameOptions.image) resolve(undefined);
+      if (!this._options.frameOptions.image) return resolve(undefined);
       const width = this._options.width + this._options.frameOptions.xSize * 2;
       const height = this._options.height + this._options.frameOptions.topSize + this._options.frameOptions.bottomSize;
 
@@ -130,16 +168,18 @@ export default class QRCodeStyling {
     }
 
     // previous getFrame
-    this._resolveFrame(null);
-    const frameImage = await this.getFrameImage();
+    this._resolveImages(null);
+    const images = await this.getImages();
 
     // ignore previous postMessage
-    if (frameImage !== null) {
+    if (images !== null) {
+      const [frameImage, qrImage] = images;
       const offscreen = this._canvas.transferControlToOffscreen();
 
-      worker.postMessage({ key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage }, [
-        offscreen
-      ]);
+      worker.postMessage(
+        { key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage, qrImage },
+        [offscreen]
+      );
     }
   }
 

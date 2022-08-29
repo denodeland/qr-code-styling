@@ -6,9 +6,9 @@ const workerCtx: Worker = self as any;
 
 workerCtx.addEventListener("message", async ({ data }) => {
   if (data.key === "initCanvas") {
-    const { options, frameImage, id } = data;
+    const { options, frameImage, id, qrImage } = data;
 
-    const canvas = new QRCanvas(data.options, data.canvas, frameImage);
+    const canvas = new QRCanvas(data.options, data.canvas, frameImage, qrImage);
 
     const qr = qrcode(options.qrOptions.typeNumber, options.qrOptions.errorCorrectionLevel);
     qr.addData(options.data, options.qrOptions.mode || getMode(options.data));

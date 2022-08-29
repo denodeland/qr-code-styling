@@ -33,14 +33,15 @@ export default class QRCanvas {
   _canvas: HTMLCanvasElement;
   _options: RequiredOptions;
   _qr?: QRCode;
-  _image?: HTMLImageElement | ImageBitmap;
+  _image?: HTMLImageElement | ImageBitmap | void;
   _workerCtx: Worker;
   _frameImage: ImageBitmap | HTMLImageElement | void;
 
   //TODO don't pass all options to this class
-  constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap) {
+  constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap, qrImage?: ImageBitmap) {
     this._workerCtx = self as any;
     this._frameImage = frameImage;
+    this._image = qrImage;
     this._canvas = canvas;
     options.width = options.width + options.frameOptions.xSize * 2;
     options.height = options.height + options.frameOptions.topSize + options.frameOptions.bottomSize;
@@ -461,6 +462,7 @@ export default class QRCanvas {
   }
 
   async loadImageFromWorker(): Promise<void> {
+    if (this._image) return;
     if (!this._options.image) return Promise.reject("image is not defined");
 
     return fetch(this._options.image)

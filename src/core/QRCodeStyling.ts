@@ -79,7 +79,7 @@ export default class QRCodeStyling {
   }
 
   getImage(image: string, width: number, height: number): Promise<ImageBitmap | void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (!image) return resolve(undefined);
 
       const img = new Image();
@@ -91,7 +91,7 @@ export default class QRCodeStyling {
           resizeQuality: "high"
         })
           .then(resolve)
-          .catch(console.log);
+          .catch(reject);
       };
 
       img.src = image;
@@ -99,7 +99,7 @@ export default class QRCodeStyling {
   }
 
   getImages(): Promise<(ImageBitmap | void)[] | null> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this._resolveImages = resolve;
       const frameImagePromise = this.getImage(
         this._options.frameOptions.image,
@@ -111,28 +111,7 @@ export default class QRCodeStyling {
       const qrImage = /\.svg$/.test(this._options.image || "") ? this._options.image : "";
       const qrImagePromise = this.getImage(qrImage || "", this._options.width / 2, 0);
 
-      Promise.all([frameImagePromise, qrImagePromise]).then(resolve);
-    });
-  }
-
-  getFrameImage(): Promise<ImageBitmap | void | null> {
-    return new Promise((resolve) => {
-      if (!this._options.frameOptions.image) return resolve(undefined);
-      const width = this._options.width + this._options.frameOptions.xSize * 2;
-      const height = this._options.height + this._options.frameOptions.topSize + this._options.frameOptions.bottomSize;
-
-      const img = new Image();
-      img.onload = function () {
-        createImageBitmap((img as unknown) as ImageBitmapSource, {
-          resizeWidth: width * 2,
-          resizeHeight: height * 2,
-          resizeQuality: "high"
-        })
-          .then(resolve)
-          .catch(console.log);
-      };
-
-      img.src = this._options.frameOptions.image;
+      Promise.all([frameImagePromise, qrImagePromise]).then(resolve).catch(reject);
     });
   }
 

@@ -85,11 +85,9 @@ export default class QRCodeStyling {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
-        const widthRel = img.width / width;
-
         createImageBitmap((img as unknown) as ImageBitmapSource, {
           resizeWidth: width,
-          resizeHeight: height || img.height / widthRel,
+          resizeHeight: height || img.height / (img.width / width),
           resizeQuality: "high"
         })
           .then(resolve)

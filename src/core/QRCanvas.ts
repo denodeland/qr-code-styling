@@ -176,7 +176,7 @@ export default class QRCanvas {
     const canvasContext = this.context as CanvasRenderingContext2D;
     const options = this._options;
     if (canvasContext && options.frameOptions.image && this._frameImage) {
-      canvasContext.drawImage((this._frameImage as unknown) as CanvasImageSource, 0, 0, options.width, options.height);
+      canvasContext.drawImage(this._frameImage as CanvasImageSource, 0, 0, options.width, options.height);
     }
   }
 
@@ -527,7 +527,7 @@ export default class QRCanvas {
     const dw = width - options.imageOptions.margin * 2;
     const dh = height - options.imageOptions.margin * 2;
 
-    canvasContext.drawImage((this._image as unknown) as CanvasImageSource, dx, dy, dw < 0 ? 0 : dw, dh < 0 ? 0 : dh);
+    canvasContext.drawImage(this._image as CanvasImageSource, dx, dy, dw < 0 ? 0 : dw, dh < 0 ? 0 : dh);
   }
 
   fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void {

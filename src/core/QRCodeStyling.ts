@@ -90,7 +90,7 @@ export default class QRCodeStyling {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
-        createImageBitmap((img as unknown) as ImageBitmapSource, {
+        createImageBitmap(img as ImageBitmapSource, {
           resizeWidth: width,
           resizeHeight: height || img.height / (img.width / width),
           resizeQuality: "high"
@@ -165,6 +165,8 @@ export default class QRCodeStyling {
     // ignore previous postMessage
     if (images !== null) {
       const [frameImage, qrImage] = images;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       const offscreen = this._canvas.transferControlToOffscreen();
 
       worker.postMessage(

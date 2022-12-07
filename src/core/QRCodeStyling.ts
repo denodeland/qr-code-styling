@@ -178,6 +178,7 @@ export default class QRCodeStyling {
     // ignore previous postMessage
     if (images !== null) {
       const [frameImage, qrImage] = images;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const offscreen = (this._canvas as any).transferControlToOffscreen();
 
       worker.postMessage(

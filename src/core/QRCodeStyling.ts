@@ -54,6 +54,18 @@ export default class QRCodeStyling {
     if (options?.frameOptions) {
       this._options.frameOptions = { ...options?.frameOptions };
     }
+    if (options?.backgroundOptions) {
+      this._options.backgroundOptions = { ...options?.backgroundOptions };
+    }
+    if (options?.cornersDotOptions) {
+      this._options.cornersDotOptions = { ...options?.cornersDotOptions };
+    }
+    if (options?.cornersSquareOptions) {
+      this._options.cornersSquareOptions = { ...options?.cornersSquareOptions };
+    }
+    if (options?.dotsOptions) {
+      this._options.dotsOptions = { ...options?.dotsOptions };
+    }
 
     this._options = options ? sanitizeOptions(mergeDeep(this._options, options) as RequiredOptions) : this._options;
 
@@ -90,7 +102,8 @@ export default class QRCodeStyling {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
-        createImageBitmap(img as ImageBitmapSource, {
+        const imgUnknown = img as unknown;
+        createImageBitmap(imgUnknown as ImageBitmapSource, {
           resizeWidth: width,
           resizeHeight: height || img.height / (img.width / width),
           resizeQuality: "high"
@@ -165,9 +178,7 @@ export default class QRCodeStyling {
     // ignore previous postMessage
     if (images !== null) {
       const [frameImage, qrImage] = images;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const offscreen = this._canvas.transferControlToOffscreen();
+      const offscreen = (this._canvas as any).transferControlToOffscreen();
 
       worker.postMessage(
         { key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage, qrImage },

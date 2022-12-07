@@ -3,7 +3,7 @@ import errorCorrectionPercents from "../constants/errorCorrectionPercents";
 import QRDot from "./QRDot";
 import QRCornerSquare from "./QRCornerSquare";
 import QRCornerDot from "./QRCornerDot";
-import { RequiredOptions, Gradient, FrameOptions } from "./QROptions";
+import { RequiredOptions, FrameOptions, CreateGradientOptions } from "./QROptions";
 import gradientTypes from "../constants/gradientTypes";
 import { QRCode } from "../types";
 
@@ -39,6 +39,7 @@ export default class QRCanvas {
 
   //TODO don't pass all options to this class
   constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap, qrImage?: ImageBitmap) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this._workerCtx = self as any;
     this._frameImage = frameImage;
     this._image = qrImage;
@@ -184,10 +185,33 @@ export default class QRCanvas {
     const canvasContext = this.context;
     const options = this._options;
 
-    if (canvasContext && options.frameOptions.backgroundColor) {
-      canvasContext.fillStyle = options.frameOptions.backgroundColor;
+    if (canvasContext) {
+      if (
+        options.frameOptions.background &&
+        (options.frameOptions.background.color || options.frameOptions.background.gradient)
+      ) {
+        if (options.frameOptions.background.gradient) {
+          const gradientOptions = options.frameOptions.background.gradient;
+          const gradient = this._createGradient({
+            context: canvasContext,
+            options: gradientOptions,
+            additionalRotation: 0,
+            x: 0,
+            y: 0,
+            width: this._canvas.width,
+            height: this._canvas.height
+          });
 
-      this.fillRoundRect(0, 0, this._canvas.width, this._canvas.height, options.borderRadius);
+          gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
+            gradient.addColorStop(offset, color);
+          });
+          canvasContext.fillStyle = gradient;
+        } else {
+          canvasContext.fillStyle = options.frameOptions.background.color;
+        }
+
+        this.fillRoundRect(0, 0, this._canvas.width, this._canvas.height, options.borderRadius);
+      }
     }
   }
 
@@ -197,14 +221,32 @@ export default class QRCanvas {
 
     if (canvasContext) {
       if (options.backgroundOptions.gradient) {
+        if (!this._qr) {
+          throw "QR code is not defined";
+        }
+        const count = this._qr.getModuleCount();
+
+        if (count > options.width || count > options.height) {
+          throw "The canvas is too small.";
+        }
+
+        const minSize =
+          Math.min(options.width, options.height) - options.margin * 2 - this.getXPadding(options.frameOptions);
+        const dotSize = Math.floor(minSize / count);
+        const xBeginning = this.getXBeginning(count, dotSize);
+        const yBeginning =
+          Math.floor(
+            (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
+          ) + options.frameOptions.topSize;
+
         const gradientOptions = options.backgroundOptions.gradient;
         const gradient = this._createGradient({
           context: canvasContext,
           options: gradientOptions,
           additionalRotation: 0,
-          x: 0,
-          y: 0,
-          size: this._canvas.width > this._canvas.height ? this._canvas.width : this._canvas.height
+          x: xBeginning,
+          y: yBeginning,
+          width: minSize
         });
 
         gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
@@ -294,7 +336,7 @@ export default class QRCanvas {
         additionalRotation: 0,
         x: xBeginning,
         y: yBeginning,
-        size: count * dotSize
+        width: count * dotSize
       });
 
       gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
@@ -380,7 +422,7 @@ export default class QRCanvas {
           additionalRotation: rotation,
           x,
           y,
-          size: cornersSquareSize
+          width: cornersSquareSize
         });
 
         gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
@@ -428,7 +470,7 @@ export default class QRCanvas {
           additionalRotation: rotation,
           x: x + dotSize * 2,
           y: y + dotSize * 2,
-          size: cornersDotSize
+          width: cornersDotSize
         });
 
         gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
@@ -549,56 +591,46 @@ export default class QRCanvas {
     canvasContext.fill();
   }
 
-  _createGradient({
-    context,
-    options,
-    additionalRotation,
-    x,
-    y,
-    size
-  }: {
-    context: CanvasRenderingContext2D;
-    options: Gradient;
-    additionalRotation: number;
-    x: number;
-    y: number;
-    size: number;
-  }): CanvasGradient {
+  _createGradient(opt: CreateGradientOptions): CanvasGradient {
     let gradient;
+    const { context, options, additionalRotation, x, y, width, height } = opt;
+    const computedHeight = height || width;
 
     if (options.type === gradientTypes.radial) {
-      gradient = context.createRadialGradient(x + size / 2, y + size / 2, 0, x + size / 2, y + size / 2, size / 2);
+      const centerX = x + width / 2;
+      const centerY = y + computedHeight / 2;
+      gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, width / 2);
     } else {
       const rotation = ((options.rotation || 0) + additionalRotation) % (2 * Math.PI);
       const positiveRotation = (rotation + 2 * Math.PI) % (2 * Math.PI);
-      let x0 = x + size / 2;
-      let y0 = y + size / 2;
-      let x1 = x + size / 2;
-      let y1 = y + size / 2;
+      let x0 = x + width / 2;
+      let y0 = y + computedHeight / 2;
+      let x1 = x + width / 2;
+      let y1 = y + computedHeight / 2;
 
       if (
         (positiveRotation >= 0 && positiveRotation <= 0.25 * Math.PI) ||
         (positiveRotation > 1.75 * Math.PI && positiveRotation <= 2 * Math.PI)
       ) {
-        x0 = x0 - size / 2;
-        y0 = y0 - (size / 2) * Math.tan(rotation);
-        x1 = x1 + size / 2;
-        y1 = y1 + (size / 2) * Math.tan(rotation);
+        x0 = x0 - width / 2;
+        y0 = y0 - (computedHeight / 2) * Math.tan(rotation);
+        x1 = x1 + width / 2;
+        y1 = y1 + (computedHeight / 2) * Math.tan(rotation);
       } else if (positiveRotation > 0.25 * Math.PI && positiveRotation <= 0.75 * Math.PI) {
-        y0 = y0 - size / 2;
-        x0 = x0 - size / 2 / Math.tan(rotation);
-        y1 = y1 + size / 2;
-        x1 = x1 + size / 2 / Math.tan(rotation);
+        y0 = y0 - computedHeight / 2;
+        x0 = x0 - width / 2 / Math.tan(rotation);
+        y1 = y1 + computedHeight / 2;
+        x1 = x1 + width / 2 / Math.tan(rotation);
       } else if (positiveRotation > 0.75 * Math.PI && positiveRotation <= 1.25 * Math.PI) {
-        x0 = x0 + size / 2;
-        y0 = y0 + (size / 2) * Math.tan(rotation);
-        x1 = x1 - size / 2;
-        y1 = y1 - (size / 2) * Math.tan(rotation);
+        x0 = x0 + width / 2;
+        y0 = y0 + (computedHeight / 2) * Math.tan(rotation);
+        x1 = x1 - width / 2;
+        y1 = y1 - (computedHeight / 2) * Math.tan(rotation);
       } else if (positiveRotation > 1.25 * Math.PI && positiveRotation <= 1.75 * Math.PI) {
-        y0 = y0 + size / 2;
-        x0 = x0 + size / 2 / Math.tan(rotation);
-        y1 = y1 - size / 2;
-        x1 = x1 - size / 2 / Math.tan(rotation);
+        y0 = y0 + computedHeight / 2;
+        x0 = x0 + width / 2 / Math.tan(rotation);
+        y1 = y1 - computedHeight / 2;
+        x1 = x1 - width / 2 / Math.tan(rotation);
       }
 
       gradient = context.createLinearGradient(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));

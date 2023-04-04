@@ -11,6 +11,7 @@ module.exports = (env, argv) => {
 
   if (argv.mode === "production") {
     config.devtool = "source-map";
+    config.output.publicPath = "http://localhost:3050/js";
   }
 
   return config;

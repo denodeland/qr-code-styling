@@ -36,6 +36,7 @@ export default class QRCanvas {
   _image?: HTMLImageElement | ImageBitmap | void;
   _workerCtx: Worker;
   _frameImage: ImageBitmap | HTMLImageElement | void;
+  _originalWidth: number;
 
   //TODO don't pass all options to this class
   constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap, qrImage?: ImageBitmap) {
@@ -46,6 +47,7 @@ export default class QRCanvas {
     this._canvas = canvas;
     const { topSize, bottomSize } = options.frameOptions;
     const xPadding = this.getXPadding(options.frameOptions);
+    this._originalWidth = options.width;
     options.width = options.width + xPadding;
     options.height = options.height + topSize + bottomSize;
     this._canvas.width = options.width;
@@ -559,7 +561,10 @@ export default class QRCanvas {
     }
 
     const options = this._options;
-    const xBeginning = Math.floor((options.width - count * dotSize) / 2);
+    let xBeginning = Math.floor((options.width - count * dotSize) / 2);
+    if (options.frameOptions.leftSize) {
+      xBeginning = Math.floor((this._originalWidth - count * dotSize) / 2 + options.frameOptions.leftSize);
+    }
     const yBeginning =
       Math.floor(
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2

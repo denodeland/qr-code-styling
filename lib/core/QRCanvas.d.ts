@@ -8,6 +8,7 @@ export default class QRCanvas {
     _image?: HTMLImageElement | ImageBitmap | void;
     _workerCtx: Worker;
     _frameImage: ImageBitmap | HTMLImageElement | void;
+    _originalWidth: number;
     constructor(options: RequiredOptions, canvas: HTMLCanvasElement, frameImage?: ImageBitmap, qrImage?: ImageBitmap);
     getXPadding(options: FrameOptions): number;
     get context(): CanvasRenderingContext2D | null;

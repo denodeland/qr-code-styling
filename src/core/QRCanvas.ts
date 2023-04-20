@@ -163,13 +163,16 @@ export default class QRCanvas {
       return Promise.resolve();
     }
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const options = this._options;
       const image = new Image();
 
       this._frameImage = image;
       image.onload = (): void => {
         resolve();
+      };
+      image.onerror = (): void => {
+        reject(new Error("Frame image error"));
       };
       image.src = options.frameOptions.image;
     });
@@ -512,7 +515,7 @@ export default class QRCanvas {
       const image = new Image();
 
       if (!options.image) {
-        return reject("Image is not defined");
+        return reject(new Error("Image is not defined"));
       }
 
       if (typeof options.imageOptions.crossOrigin === "string") {
@@ -523,19 +526,25 @@ export default class QRCanvas {
       image.onload = (): void => {
         resolve();
       };
+      image.onerror = (): void => {
+        reject(new Error("Image load error"));
+      };
       image.src = options.image;
     });
   }
 
   async loadImageFromWorker(): Promise<void> {
     if (this._image) return;
-    if (!this._options.image) return Promise.reject("image is not defined");
+    if (!this._options.image) return Promise.reject(new Error("image is not defined"));
 
     return fetch(this._options.image)
       .then((r) => r.blob())
       .then((imgblob) => createImageBitmap(imgblob))
       .then((img) => {
         this._image = img;
+      })
+      .catch((error) => {
+        throw error;
       });
   }
 

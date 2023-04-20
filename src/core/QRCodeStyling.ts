@@ -28,7 +28,7 @@ export default class QRCodeStyling {
   _started: boolean;
   _resolveImages: (image: void[] | ImageBitmap[] | null) => void;
   _resolveDrawingEnded?: () => void;
-  _rejectDrawingEnded?: (error: Error | undefined) => void;
+  _rejectDrawingEnded?: (error: Error | undefined | unknown) => void;
   _retryCount = 0;
 
   constructor(options: Partial<Options>, container: HTMLElement) {
@@ -112,6 +112,10 @@ export default class QRCodeStyling {
           .catch(reject);
       };
 
+      img.onerror = () => {
+        reject(new Error("Image load error"));
+      };
+
       img.src = image;
     });
   }
@@ -173,18 +177,23 @@ export default class QRCodeStyling {
 
     // previous getFrame
     this._resolveImages(null);
-    const images = await this.getImages();
+    try {
+      const images = await this.getImages();
+      // ignore previous postMessage
+      if (images !== null) {
+        const [frameImage, qrImage] = images;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const offscreen = (this._canvas as any).transferControlToOffscreen();
 
-    // ignore previous postMessage
-    if (images !== null) {
-      const [frameImage, qrImage] = images;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const offscreen = (this._canvas as any).transferControlToOffscreen();
-
-      worker.postMessage(
-        { key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage, qrImage },
-        [offscreen]
-      );
+        worker.postMessage(
+          { key: "initCanvas", canvas: offscreen, options: this._options, id: this._id, frameImage, qrImage },
+          [offscreen]
+        );
+      }
+    } catch (error) {
+      if (this._rejectDrawingEnded) {
+        this._rejectDrawingEnded(error);
+      }
     }
   }
 

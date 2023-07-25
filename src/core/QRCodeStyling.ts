@@ -13,9 +13,17 @@ type DownloadOptions = {
   extension?: Extension;
 };
 
+let workerError = false;
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const worker = new Worker();
+worker.onerror = (event: ErrorEvent) => {
+  workerError = true;
+  window.dispatchEvent(new CustomEvent("workerError"));
+  console.error(`Worker error: ${event.message}`);
+};
+
 let id = 0;
 
 export default class QRCodeStyling {
@@ -33,19 +41,31 @@ export default class QRCodeStyling {
 
   constructor(options: Partial<Options>, container: HTMLElement) {
     this._options = options ? sanitizeOptions(mergeDeep(defaultOptions, options) as RequiredOptions) : defaultOptions;
+    this._options.offscreen = workerError ? false : this._options.offscreen;
     this._id = id++;
     this._started = false;
     this._container = container;
     this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
+    this.handleWorkerError = this.handleWorkerError.bind(this);
     this.clear = this.clear.bind(this);
     this._resolveImages = () => null;
     this.update();
+
+    if (this._options.offscreen) {
+      window.addEventListener("workerError", this.handleWorkerError);
+    }
   }
 
   static _clearContainer(container?: HTMLElement): void {
     if (container) {
       container.innerHTML = "";
     }
+  }
+
+  handleWorkerError(): void {
+    this._options.offscreen = false;
+    this.update();
+    window.removeEventListener("workerError", this.handleWorkerError);
   }
 
   update(options?: Partial<RequiredOptions>): void {
@@ -92,7 +112,11 @@ export default class QRCodeStyling {
     this._qr.make();
 
     const qrCanvas = new QRCanvas(this._options, this._canvas);
-    this._drawingPromise = qrCanvas.drawQR(this._qr);
+    if (!this._drawingPromise) {
+      this._drawingPromise = qrCanvas.drawQR(this._qr);
+    } else {
+      qrCanvas.drawQR(this._qr).then(this._resolveDrawingEnded, this._rejectDrawingEnded);
+    }
   }
 
   getImage(image: string, width: number, height: number): Promise<ImageBitmap | void> {
@@ -243,6 +267,9 @@ export default class QRCodeStyling {
   }
 
   clear(): void {
-    worker.removeEventListener("message", this.handleWorkerMessage);
+    if (this._options.offscreen) {
+      worker.removeEventListener("message", this.handleWorkerMessage);
+      window.removeEventListener("workerError", this.handleWorkerError);
+    }
   }
 }

@@ -18,6 +18,7 @@ export default class QRCodeStyling {
     _retryCount: number;
     constructor(options: Partial<Options>, container: HTMLElement);
     static _clearContainer(container?: HTMLElement): void;
+    handleWorkerError(): void;
     update(options?: Partial<RequiredOptions>): void;
     drawQR(): void;
     getImage(image: string, width: number, height: number): Promise<ImageBitmap | void>;

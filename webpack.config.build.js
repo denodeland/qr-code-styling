@@ -10,6 +10,7 @@ module.exports = (env, argv) => {
   }
 
   if (argv.mode === "production") {
+    config.output.publicPath = "/static/js/";
     config.devtool = "source-map";
   }
 

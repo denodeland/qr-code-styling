@@ -1,7 +1,7 @@
 {
-  "name": "@cvcode/qr-code-styling",
+  "name": "@denodeland/qr-code-styling",
   "version": "1.4.0",
-  "description": "Anpm runbuildd a style and an image to your QR code",
+  "description": "Add a style and an image to your QR code",
   "main": "lib/qr-code-styling.js",
   "types": "lib/index.d.ts",
   "files": [

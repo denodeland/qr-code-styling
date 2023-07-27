@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-          scope: "@cvcode"
+          scope: "@denodeland"
       - run: npm ci
       - run: npm run build
       - run: npm publish --access public

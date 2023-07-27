@@ -138,6 +138,7 @@ export default class QRSVG {
 
     this.clear();
     this.drawFrameBackground();
+    this.drawFrame();
     this.drawBackground();
     this.drawDots((i: number, j: number): boolean => {
       if (this._options.imageOptions.hideBackgroundDots) {
@@ -162,7 +163,6 @@ export default class QRSVG {
       return true;
     });
     this.drawCorners();
-    this.drawFrame();
 
     if (this._options.image) {
       this.drawImage({ width: drawImageSize.width, height: drawImageSize.height, count, dotSize });
@@ -216,6 +216,15 @@ export default class QRSVG {
     }
   }
 
+  getXBeginning(count: number, dotSize: number): number {
+    const { width, frameOptions } = this._options;
+    if (frameOptions.xSize) {
+      return Math.floor((width - count * dotSize) / 2);
+    }
+    const { leftSize = 0, rightSize = 0 } = frameOptions;
+    return Math.floor((width - leftSize - rightSize - count * dotSize) / 2) + leftSize;
+  }
+
   drawDots(filter?: FilterFunction): void {
     if (!this._qr) {
       throw "QR code is not defined";
@@ -230,7 +239,7 @@ export default class QRSVG {
 
     const minSize = Math.min(options.width, options.height) - options.margin * 2 - this.xPadding;
     const dotSize = Math.floor(minSize / count);
-    const xBeginning = Math.floor((options.width - count * dotSize) / 2);
+    const xBeginning = this.getXBeginning(count, dotSize);
     const yBeginning =
       Math.floor(
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
@@ -296,7 +305,7 @@ export default class QRSVG {
     const dotSize = Math.floor(minSize / count);
     const cornersSquareSize = dotSize * 7;
     const cornersDotSize = dotSize * 3;
-    const xBeginning = Math.floor((options.width - count * dotSize) / 2);
+    const xBeginning = this.getXBeginning(count, dotSize);
     const yBeginning =
       Math.floor(
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2

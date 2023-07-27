@@ -1,4 +1,4 @@
-import { DotType, GradientType, CornerSquareType, CornerDotType, TypeNumber, ErrorCorrectionLevel, Mode } from "../types";
+import { DotType, GradientType, CornerSquareType, CornerDotType, TypeNumber, ErrorCorrectionLevel, Mode, DrawType } from "../types";
 export declare type Gradient = {
     type: GradientType;
     rotation?: number;
@@ -48,9 +48,9 @@ export declare type Options = {
     frameOptions?: FrameOptions;
 };
 export interface FrameOptions {
-    xSize?: number;
-    leftSize?: number;
-    rightSize?: number;
+    xSize: number;
+    leftSize: number;
+    rightSize: number;
     topSize: number;
     bottomSize: number;
     image: string;
@@ -58,8 +58,12 @@ export interface FrameOptions {
         color: string;
         gradient?: Gradient;
     };
+    svgContent: string;
+    svgWidth: number;
+    svgHeight: number;
 }
 export interface RequiredOptions extends Options {
+    type: DrawType;
     width: number;
     height: number;
     margin: number;

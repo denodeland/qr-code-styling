@@ -1,4 +1,5 @@
 import { Options, RequiredOptions, FrameOptions } from "./QROptions";
+import QRSVG from "./QRSVG";
 import { Extension, QRCode } from "../types";
 declare type DownloadOptions = {
     name?: string;
@@ -6,8 +7,10 @@ declare type DownloadOptions = {
 };
 export default class QRCodeStyling {
     _options: RequiredOptions;
+    _originalOptions: RequiredOptions;
     _container?: HTMLElement;
     _canvas?: HTMLCanvasElement;
+    _svg?: QRSVG;
     _qr?: QRCode;
     _drawingPromise?: Promise<void>;
     _id: number;
@@ -21,6 +24,7 @@ export default class QRCodeStyling {
     handleWorkerError(): void;
     update(options?: Partial<RequiredOptions>): void;
     drawQR(): void;
+    drawSvgQR(): void;
     getImage(image: string, width: number, height: number): Promise<ImageBitmap | void>;
     getXPadding(options: FrameOptions): number;
     getImages(): Promise<(ImageBitmap | void)[] | null>;
@@ -33,7 +37,12 @@ export default class QRCodeStyling {
     }): void;
     drawQRFromWorker(): Promise<void>;
     append(container?: HTMLElement): void;
-    download(downloadOptions?: Partial<DownloadOptions> | string): void;
+    parseDownloadOptions(downloadOptions?: Partial<DownloadOptions> | string): {
+        name: string;
+        extension: Extension;
+    };
+    download(downloadOptions?: Partial<DownloadOptions> | string): Promise<void>;
+    downloadSvg(name: string): Promise<void>;
     clear(): void;
 }
 export {};

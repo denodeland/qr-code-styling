@@ -1,4 +1,4 @@
-import { CornerSquareType } from "../types";
+import { CornerDotType } from "../../../types";
 declare type DrawArgs = {
     x: number;
     y: number;
@@ -21,20 +21,18 @@ declare type RotateFigureArgs = {
     rotation: number;
     draw: () => void;
 };
-export default class QRCornerSquare {
+export default class QRCornerDot {
     _context: CanvasRenderingContext2D;
-    _type: CornerSquareType;
+    _type: CornerDotType;
     constructor({ context, type }: {
         context: CanvasRenderingContext2D;
-        type: CornerSquareType;
+        type: CornerDotType;
     });
     draw(x: number, y: number, size: number, rotation: number): void;
     _rotateFigure({ x, y, size, context, rotation, draw }: RotateFigureArgs): void;
     _basicDot(args: BasicFigureDrawArgs): void;
     _basicSquare(args: BasicFigureDrawArgs): void;
-    _basicExtraRounded(args: BasicFigureDrawArgs): void;
     _drawDot({ x, y, size, context, rotation }: DrawArgs): void;
     _drawSquare({ x, y, size, context, rotation }: DrawArgs): void;
-    _drawExtraRounded({ x, y, size, context, rotation }: DrawArgs): void;
 }
 export {};

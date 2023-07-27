@@ -527,7 +527,7 @@ export default class QRCanvas {
         resolve();
       };
       image.onerror = (): void => {
-        reject(new Error("Image load error"));
+        reject(new Error(`Image load error - src: ${options.image}`));
       };
       image.src = options.image;
     });

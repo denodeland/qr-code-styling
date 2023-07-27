@@ -22,6 +22,7 @@
     </style>
     <div class="no-qr">
       <div id="canvas"></div>
+      <div id="svg"></div>
     </div>
     <script type="text/javascript">
       const size = 500;
@@ -102,14 +103,22 @@
           crossOrigin: "anonymous"
         },
         frameOptions: {
-          image:
-            "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%221300%22%20viewBox%3D%220%200%201000%201300%22%3E%3Cpath%20fill%3D%22%23892929%22%20d%3D%22M960%2C0H40A40%2C40%2C0%2C0%2C0%2C0%2C40V960a40%2C40%2C0%2C0%2C0%2C40%2C40H960a40%2C40%2C0%2C0%2C0%2C40-40V40A40%2C40%2C0%2C0%2C0%2C960%2C0Zm0%2C960H40V40H960Z%22%2F%3E%3Crect%20fill%3D%22%23892929%22%20y%3D%221040%22%20width%3D%221000%22%20height%3D%22260%22%20rx%3D%2240%22%2F%3E%3Ctext%09x%3D%2250%25%22%20y%3D%221180%22%20fill%3D%22%23fff%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2290%22%20font-weight%3D%22600%22%3E%C2%A1Escan%C3%A9ame!%3C%2Ftext%3E%3C%2Fsvg%3E",
           xSize: 72,
-          topSize: 72,
-          bottomSize: 265
+          leftSize: 0,
+          rightSize: 0,
+          topSize: 205,
+          bottomSize: 320,
+          image:
+            "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%221600%22%20viewBox%3D%220%200%201000%201600%22%3E%3Cdefs%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M960%2C0H40A40%2C40%2C0%2C0%2C0%2C0%2C40V1560a40%2C40%2C0%2C0%2C0%2C40%2C40H960a40%2C40%2C0%2C0%2C0%2C40-40V40A40%2C40%2C0%2C0%2C0%2C960%2C0ZM482%2C115h92a12%2C12%2C0%2C0%2C1%2C0%2C24H482a12%2C12%2C0%2C0%2C1%2C0-24Zm-48-8a20%2C20%2C0%2C1%2C1-20%2C20A20%2C20%2C0%2C0%2C1%2C434%2C107Zm66%2C1449.5a77.5%2C77.5%2C0%2C1%2C1%2C77.5-77.5A77.5%2C77.5%2C0%2C0%2C1%2C500%2C1556.5ZM960%2C1310a40%2C40%2C0%2C0%2C1-40%2C40H80a40%2C40%2C0%2C0%2C1-40-40V290a40%2C40%2C0%2C0%2C1%2C40-40H920a40%2C40%2C0%2C0%2C1%2C40%2C40Z%22%2F%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M500%2C1423a56%2C56%2C0%2C1%2C0%2C56%2C56A56.06%2C56.06%2C0%2C0%2C0%2C500%2C1423Zm0%2C104a48%2C48%2C0%2C1%2C1%2C48-48A48.05%2C48.05%2C0%2C0%2C1%2C500%2C1527Z%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%221225%22%20fill%3D%22%23d33636%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2290%22%20font-weight%3D%22600%22%3EScan%20me!%3C%2Ftext%3E%3C%2Fsvg%3E",
+          background: { color: "#adffeb" },
+          svgContent:
+            '<defs></defs><path fill="#000000" d="M960,0H40A40,40,0,0,0,0,40V1560a40,40,0,0,0,40,40H960a40,40,0,0,0,40-40V40A40,40,0,0,0,960,0ZM482,115h92a12,12,0,0,1,0,24H482a12,12,0,0,1,0-24Zm-48-8a20,20,0,1,1-20,20A20,20,0,0,1,434,107Zm66,1449.5a77.5,77.5,0,1,1,77.5-77.5A77.5,77.5,0,0,1,500,1556.5ZM960,1310a40,40,0,0,1-40,40H80a40,40,0,0,1-40-40V290a40,40,0,0,1,40-40H920a40,40,0,0,1,40,40Z"/><path fill="#000000" d="M500,1423a56,56,0,1,0,56,56A56.06,56.06,0,0,0,500,1423Zm0,104a48,48,0,1,1,48-48A48.05,48.05,0,0,1,500,1527Z"/><text x="50%" y="1225" fill="#d33636" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="90" font-weight="600">Scan me!</text>',
+          svgWidth: 1000,
+          svgHeight: 1600
         },
-        backgroundColor: "#0000FF",
-        offscreen: false
+        image: "",
+        cornersSquareOptions: { type: "", color: "#000000" },
+        cornersDotOptions: { type: "", color: "#000000" }
       };
       console.log("options", options);
       const qrCode = new QRCodeStyling(options);
@@ -120,7 +129,7 @@
       });
 
       qrCode.append(document.getElementById("canvas"));
-      qrCode2.append(document.getElementById("canvas"));
+      qrCode2.append(document.getElementById("svg"));
     </script>
   </body>
 </html>

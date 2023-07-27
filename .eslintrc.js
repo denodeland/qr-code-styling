@@ -2,7 +2,7 @@ module.exports = {
   env: {
     node: true
   },
-  parser:  '@typescript-eslint/parser',
+  parser: "@typescript-eslint/parser",
   extends: [
     "eslint:recommended",
     "plugin:prettier/recommended",
@@ -12,5 +12,13 @@ module.exports = {
   ],
   parserOptions: {
     sourceType: "module"
-  }
+  },
+  overrides: [
+    {
+      files: ["webpack*"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ]
 };

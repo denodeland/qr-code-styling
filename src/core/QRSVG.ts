@@ -38,6 +38,9 @@ export default class QRSVG {
   _options: RequiredOptions;
   _qr?: QRCode;
   _image?: HTMLImageElement;
+  _svgImageElement?: SVGSVGElement;
+  _svgImageWidth?: number;
+  _svgImageHeight?: number;
   _baseWidth = 0;
   _svgHeight = 0;
 
@@ -119,24 +122,24 @@ export default class QRSVG {
     };
 
     this._qr = qr;
+    this.clear();
 
     if (this._options.image) {
       await this.loadImage();
-      if (!this._image) return;
+      if (!this._image && !this._svgImageElement) return;
       const { imageOptions, qrOptions } = this._options;
       const coverLevel = imageOptions.imageSize * errorCorrectionPercents[qrOptions.errorCorrectionLevel];
       const maxHiddenDots = Math.floor(coverLevel * count * count);
 
       drawImageSize = calculateImageSize({
-        originalWidth: this._image.width,
-        originalHeight: this._image.height,
+        originalWidth: this._image?.width || this._svgImageWidth || 0,
+        originalHeight: this._image?.height || this._svgImageHeight || 0,
         maxHiddenDots,
         maxHiddenAxisDots: count - 14,
         dotSize
       });
     }
 
-    this.clear();
     this.drawFrameBackground();
     this.drawFrame();
     this.drawBackground();
@@ -421,6 +424,22 @@ export default class QRSVG {
     });
   }
 
+  async loadSvgImage(src: string): Promise<void> {
+    const res = await fetch(src);
+    const svgImage = await res.text();
+    const container = document.createElement("div");
+    container.style.visibility = "hidden";
+    container.innerHTML = svgImage;
+    this._svgImageElement = container.querySelector("svg") as SVGSVGElement;
+
+    document.body.appendChild(container);
+    const { width, height } = this._svgImageElement.getBBox();
+    this._svgImageWidth = width;
+    this._svgImageHeight = height;
+
+    container.remove();
+  }
+
   loadImage(): Promise<void> {
     return new Promise((resolve, reject) => {
       const options = this._options;
@@ -432,6 +451,16 @@ export default class QRSVG {
 
       if (typeof options.imageOptions.crossOrigin === "string") {
         image.crossOrigin = options.imageOptions.crossOrigin;
+      }
+
+      if (options.image.slice(-4) === ".svg") {
+        this.loadSvgImage(options.image)
+          .then(resolve)
+          .catch(() => {
+            reject(new Error(`SVG image load error - src: ${options.image}`));
+          });
+
+        return;
       }
 
       this._image = image;
@@ -456,7 +485,7 @@ export default class QRSVG {
     count: number;
     dotSize: number;
   }): void {
-    if (!this._image) {
+    if (!this._image && !this._svgImageElement) {
       throw "image is not defined";
     }
 
@@ -474,26 +503,21 @@ export default class QRSVG {
     const dy = yBeginning + options.imageOptions.margin + (count * dotSize - height) / 2;
     const dw = width - options.imageOptions.margin * 2;
     const dh = height - options.imageOptions.margin * 2;
-
-    const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-    image.setAttribute("href", options.image || "");
-    image.setAttribute("x", String(dx));
-    image.setAttribute("y", String(dy));
-    image.setAttribute("width", `${dw}px`);
-    image.setAttribute("height", `${dh}px`);
-
-    this._element.appendChild(image);
-  }
-
-  drawFrameImage(): void {
-    const options = this._options;
-
-    const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-    image.setAttribute("href", options.frameOptions.image || "");
-    image.setAttribute("x", String(0));
-    image.setAttribute("y", String(0));
-    image.setAttribute("width", `${300}px`);
-    image.setAttribute("height", `${300}px`);
+    let image = null;
+    if (this._svgImageElement) {
+      image = this._svgImageElement;
+      image.setAttribute("x", String(dx));
+      image.setAttribute("y", String(dy));
+      image.setAttribute("width", `${dw}px`);
+      image.setAttribute("height", `${dh}px`);
+    } else {
+      image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      image.setAttribute("href", options.image || "");
+      image.setAttribute("x", String(dx));
+      image.setAttribute("y", String(dy));
+      image.setAttribute("width", `${dw}px`);
+      image.setAttribute("height", `${dh}px`);
+    }
 
     this._element.appendChild(image);
   }

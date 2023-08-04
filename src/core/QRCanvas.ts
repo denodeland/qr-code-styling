@@ -29,6 +29,15 @@ const dotMask = [
   [0, 0, 0, 0, 0, 0, 0]
 ];
 
+// Cache last svg string
+const svgCache: {
+  src: string;
+  element: HTMLImageElement | null;
+} = {
+  src: "",
+  element: null
+};
+
 export default class QRCanvas {
   _canvas: HTMLCanvasElement;
   _options: RequiredOptions;
@@ -509,8 +518,7 @@ export default class QRCanvas {
    * firefox patch, drawImage() doesn't work with SVG images without width or height
    * https://bugzilla.mozilla.org/show_bug.cgi?id=700533
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async fixSvgImage(image: HTMLImageElement): Promise<any> {
+  async fixSvgImage(image: HTMLImageElement): Promise<void> {
     if (image.width) {
       return;
     }
@@ -525,7 +533,10 @@ export default class QRCanvas {
     const svgText = await response.text();
     const parser = new DOMParser();
 
-    const result = parser.parseFromString(svgText, "text/xml");
+    const isBase64 = /^data:image\/svg\+xml/.test(svgText);
+    const result = isBase64
+      ? parser.parseFromString(window.atob(image.src), "image/svg+xml")
+      : parser.parseFromString(svgText, "text/xml");
     const svg = result.querySelector("svg");
 
     if (!svg) {
@@ -534,12 +545,20 @@ export default class QRCanvas {
 
     svg.setAttribute("width", width.toString());
     svg.setAttribute("height", height.toString());
+
     const base64Svg = window.btoa(new XMLSerializer().serializeToString(svg));
 
     return new Promise((resolve, reject) => {
-      image.onload = resolve;
-      image.onerror = reject;
-      image.src = `data:image/svg+xml;base64,${base64Svg}`;
+      const svgImage = new Image();
+      svgImage.onload = () => {
+        svgCache.src = image.src;
+        svgCache.element = svgImage as HTMLImageElement;
+        this._image = svgImage;
+
+        resolve();
+      };
+      svgImage.onerror = reject;
+      svgImage.src = `data:image/svg+xml;base64,${base64Svg}`;
     });
   }
 
@@ -556,13 +575,18 @@ export default class QRCanvas {
         return reject(new Error("Image is not defined"));
       }
 
+      if (options.image === svgCache.src && svgCache.element) {
+        this._image = svgCache.element;
+        return resolve();
+      }
+
       if (typeof options.imageOptions.crossOrigin === "string") {
         image.crossOrigin = options.imageOptions.crossOrigin;
       }
 
       this._image = image;
       image.onload = (): void => {
-        if (/\.svg$/.test(options.image || "")) {
+        if (/(^data:image\/svg\+xml)|(\.svg$)/.test(options.image || "")) {
           this.fixSvgImage(image)
             .then(resolve)
             .catch(() => {

@@ -146,10 +146,20 @@ export default class QRCodeStyling {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = function () {
+        let resizeHeight = Math.round(height || img.height / (img.width / width));
+
+        // firefox patch, svg images have no height unless they are in the DOM
+        if (!resizeHeight) {
+          img.style.visibility = "hidden";
+          document.body.appendChild(img);
+          resizeHeight = Math.round(img.height / (img.width / width));
+          img.remove();
+        }
+
         const imgUnknown = img as unknown;
         createImageBitmap(imgUnknown as ImageBitmapSource, {
-          resizeWidth: width,
-          resizeHeight: height || img.height / (img.width / width),
+          resizeWidth: Math.round(width),
+          resizeHeight,
           resizeQuality: "high"
         })
           .then(resolve)

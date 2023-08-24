@@ -42,6 +42,7 @@ export default class QRSVG {
   _svgImageWidth?: number;
   _svgImageHeight?: number;
   _baseWidth = 0;
+  _svgWidth = 0;
   _svgHeight = 0;
 
   //TODO don't pass all options to this class
@@ -49,8 +50,8 @@ export default class QRSVG {
     this._element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this._options = options;
     this.processSizes();
-    this._element.setAttribute("width", String(this.width));
-    this._element.setAttribute("height", String(this.height));
+    this._element.setAttribute("width", String(this._svgWidth));
+    this._element.setAttribute("height", String(this._svgHeight));
     this._element.setAttribute("viewBox", `0 0 ${this.width} ${this.height}`);
     this._defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     this._element.appendChild(this._defs);
@@ -85,6 +86,7 @@ export default class QRSVG {
   processSizes(): void {
     const { frameOptions, width, height } = this._options;
     if (!frameOptions.svgContent) {
+      this._svgWidth = width;
       this._svgHeight = height;
       this._baseWidth = width;
       return;
@@ -98,6 +100,8 @@ export default class QRSVG {
     frameOptions.bottomSize = this.calcSize(multiplier, frameOptions.bottomSize);
     this._options.margin = this.calcSize(multiplier, this._options.margin);
     this._baseWidth = frameOptions.svgWidth - this.xPadding;
+    this._svgWidth = width;
+    this._svgHeight = Math.round(width * (frameOptions.svgHeight / frameOptions.svgWidth));
     this._options.width = frameOptions.svgWidth;
     this._options.height = frameOptions.svgHeight;
   }

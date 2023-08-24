@@ -312,7 +312,9 @@ export default class QRCodeStyling {
     downloadURI(data, `${name}.${extension}`);
   }
 
-  async downloadSvg(name: string): Promise<void> {
+  async getSvgString(): Promise<string> {
+    if (!this._drawingPromise) return "";
+
     if (!this._qr) throw "QR code is empty";
 
     let svg: QRSVG;
@@ -326,11 +328,20 @@ export default class QRCodeStyling {
     }
 
     const serializer = new XMLSerializer();
-    let source = serializer.serializeToString(svg.getElement());
+    return '<?xml version="1.0" standalone="no"?>\r\n' + serializer.serializeToString(svg.getElement());
+  }
 
-    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+  async downloadSvg(name: string): Promise<void> {
+    const svgString = await this.getSvgString();
+
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgString);
     downloadURI(url, `${name}.svg`);
+  }
+
+  async getSvgFile(): Promise<Blob> {
+    const svgString = await this.getSvgString();
+
+    return new Blob([svgString], { type: "image/svg+xml" });
   }
 
   clear(): void {

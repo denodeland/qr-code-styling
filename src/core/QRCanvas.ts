@@ -205,10 +205,9 @@ export default class QRCanvas {
         (options.frameOptions.background.color || options.frameOptions.background.gradient)
       ) {
         if (options.frameOptions.background.gradient) {
-          const gradientOptions = options.frameOptions.background.gradient;
           const gradient = this._createGradient({
             context: canvasContext,
-            options: gradientOptions,
+            options: options.frameOptions.background.gradient,
             additionalRotation: 0,
             x: 0,
             y: 0,
@@ -216,9 +215,6 @@ export default class QRCanvas {
             height: this._canvas.height
           });
 
-          gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
-            gradient.addColorStop(offset, color);
-          });
           canvasContext.fillStyle = gradient;
         } else {
           canvasContext.fillStyle = options.frameOptions.background.color;
@@ -253,18 +249,13 @@ export default class QRCanvas {
             (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
           ) + options.frameOptions.topSize;
 
-        const gradientOptions = options.backgroundOptions.gradient;
         const gradient = this._createGradient({
           context: canvasContext,
-          options: gradientOptions,
+          options: options.backgroundOptions.gradient,
           additionalRotation: 0,
           x: xBeginning,
           y: yBeginning,
           width: minSize
-        });
-
-        gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
-          gradient.addColorStop(offset, color);
         });
 
         canvasContext.fillStyle = gradient;
@@ -318,8 +309,20 @@ export default class QRCanvas {
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
       ) + options.frameOptions.topSize;
     const dot = new QRDot({ context: canvasContext, type: options.dotsOptions.type });
+    let color: CanvasGradient | string = "";
 
-    canvasContext.beginPath();
+    if (options.dotsOptions.gradient) {
+      color = this._createGradient({
+        context: canvasContext,
+        options: options.dotsOptions.gradient,
+        additionalRotation: 0,
+        x: xBeginning,
+        y: yBeginning,
+        width: count * dotSize
+      });
+    } else if (options.dotsOptions.color) {
+      color = options.dotsOptions.color;
+    }
 
     for (let i = 0; i < count; i++) {
       for (let j = 0; j < count; j++) {
@@ -329,6 +332,8 @@ export default class QRCanvas {
         if (!this._qr.isDark(i, j)) {
           continue;
         }
+
+        canvasContext.beginPath();
         dot.draw(
           xBeginning + i * dotSize,
           yBeginning + j * dotSize,
@@ -339,30 +344,13 @@ export default class QRCanvas {
             return !!this._qr && this._qr.isDark(i + xOffset, j + yOffset);
           }
         );
+        if (color) {
+          canvasContext.fillStyle = canvasContext.strokeStyle = color;
+        }
+
+        canvasContext.fill("evenodd");
       }
     }
-
-    if (options.dotsOptions.gradient) {
-      const gradientOptions = options.dotsOptions.gradient;
-      const gradient = this._createGradient({
-        context: canvasContext,
-        options: gradientOptions,
-        additionalRotation: 0,
-        x: xBeginning,
-        y: yBeginning,
-        width: count * dotSize
-      });
-
-      gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
-        gradient.addColorStop(offset, color);
-      });
-
-      canvasContext.fillStyle = canvasContext.strokeStyle = gradient;
-    } else if (options.dotsOptions.color) {
-      canvasContext.fillStyle = canvasContext.strokeStyle = options.dotsOptions.color;
-    }
-
-    canvasContext.fill("evenodd");
   }
 
   drawCorners(filter?: FilterFunction): void {
@@ -429,18 +417,13 @@ export default class QRCanvas {
       }
 
       if (options.cornersSquareOptions?.gradient) {
-        const gradientOptions = options.cornersSquareOptions.gradient;
         const gradient = this._createGradient({
           context: canvasContext,
-          options: gradientOptions,
+          options: options.cornersSquareOptions.gradient,
           additionalRotation: rotation,
           x,
           y,
           width: cornersSquareSize
-        });
-
-        gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
-          gradient.addColorStop(offset, color);
         });
 
         canvasContext.fillStyle = canvasContext.strokeStyle = gradient;
@@ -477,18 +460,13 @@ export default class QRCanvas {
       }
 
       if (options.cornersDotOptions?.gradient) {
-        const gradientOptions = options.cornersDotOptions.gradient;
         const gradient = this._createGradient({
           context: canvasContext,
-          options: gradientOptions,
+          options: options.cornersDotOptions.gradient,
           additionalRotation: rotation,
           x: x + dotSize * 2,
           y: y + dotSize * 2,
           width: cornersDotSize
-        });
-
-        gradientOptions.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
-          gradient.addColorStop(offset, color);
         });
 
         canvasContext.fillStyle = canvasContext.strokeStyle = gradient;
@@ -676,7 +654,7 @@ export default class QRCanvas {
   }
 
   _createGradient(opt: CreateGradientOptions): CanvasGradient {
-    let gradient;
+    let gradient: CanvasGradient;
     const { context, options, additionalRotation, x, y, width, height } = opt;
     const computedHeight = height || width;
 
@@ -719,6 +697,10 @@ export default class QRCanvas {
 
       gradient = context.createLinearGradient(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));
     }
+
+    options.colorStops.forEach(({ offset, color }: { offset: number; color: string }) => {
+      gradient.addColorStop(offset, color);
+    });
 
     return gradient;
   }

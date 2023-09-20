@@ -10,6 +10,8 @@ import { Extension, QRCode } from "../types";
 import qrcode from "qrcode-generator";
 import Worker from "../QRStyling.worker";
 
+qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+
 type DownloadOptions = {
   name?: string;
   extension?: Extension;

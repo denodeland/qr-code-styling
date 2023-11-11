@@ -3,7 +3,7 @@ import errorCorrectionPercents from "../constants/errorCorrectionPercents";
 import QRDot from "../figures/dot/canvas/QRDot";
 import QRCornerSquare from "../figures/cornerSquare/canvas/QRCornerSquare";
 import QRCornerDot from "../figures/cornerDot/canvas/QRCornerDot";
-import { RequiredOptions, FrameOptions, CreateGradientOptions } from "./QROptions";
+import { RequiredOptions, FrameOptions, CreateGradientOptions, SetColorOptions } from "./QROptions";
 import gradientTypes from "../constants/gradientTypes";
 import { QRCode } from "../types";
 
@@ -199,29 +199,20 @@ export default class QRCanvas {
     const canvasContext = this.context;
     const options = this._options;
 
-    if (canvasContext) {
-      if (
-        options.frameOptions.background &&
-        (options.frameOptions.background.color || options.frameOptions.background.gradient)
-      ) {
-        if (options.frameOptions.background.gradient) {
-          const gradient = this._createGradient({
-            context: canvasContext,
-            options: options.frameOptions.background.gradient,
-            additionalRotation: 0,
-            x: 0,
-            y: 0,
-            width: this._canvas.width,
-            height: this._canvas.height
-          });
+    if (canvasContext && options.frameOptions.background) {
+      this._setColor({
+        color: options.frameOptions.background.color,
+        stroke: false,
+        context: canvasContext,
+        options: options.frameOptions.background.gradient,
+        additionalRotation: 0,
+        x: 0,
+        y: 0,
+        width: this._canvas.width,
+        height: this._canvas.height
+      });
 
-          canvasContext.fillStyle = gradient;
-        } else {
-          canvasContext.fillStyle = options.frameOptions.background.color;
-        }
-
-        this.fillRoundRect(0, 0, this._canvas.width, this._canvas.height, options.borderRadius);
-      }
+      this.fillRoundRect(0, 0, this._canvas.width, this._canvas.height, options.borderRadius);
     }
   }
 
@@ -309,20 +300,16 @@ export default class QRCanvas {
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
       ) + options.frameOptions.topSize;
     const dot = new QRDot({ context: canvasContext, type: options.dotsOptions.type });
-    let color: CanvasGradient | string = "";
 
-    if (options.dotsOptions.gradient) {
-      color = this._createGradient({
-        context: canvasContext,
-        options: options.dotsOptions.gradient,
-        additionalRotation: 0,
-        x: xBeginning,
-        y: yBeginning,
-        width: count * dotSize
-      });
-    } else if (options.dotsOptions.color) {
-      color = options.dotsOptions.color;
-    }
+    this._setColor({
+      color: options.dotsOptions.color,
+      context: canvasContext,
+      options: options.dotsOptions.gradient,
+      additionalRotation: 0,
+      x: xBeginning,
+      y: yBeginning,
+      width: count * dotSize
+    });
 
     for (let i = 0; i < count; i++) {
       for (let j = 0; j < count; j++) {
@@ -344,9 +331,6 @@ export default class QRCanvas {
             return !!this._qr && this._qr.isDark(i + xOffset, j + yOffset);
           }
         );
-        if (color) {
-          canvasContext.fillStyle = canvasContext.strokeStyle = color;
-        }
 
         canvasContext.fill("evenodd");
       }
@@ -390,6 +374,16 @@ export default class QRCanvas {
       const x = xBeginning + column * dotSize * (count - 7);
       const y = yBeginning + row * dotSize * (count - 7);
 
+      this._setColor({
+        color: options.cornersSquareOptions?.color,
+        context: canvasContext,
+        options: options.cornersSquareOptions?.gradient,
+        additionalRotation: rotation,
+        x,
+        y,
+        width: cornersSquareSize
+      });
+
       if (options.cornersSquareOptions?.type) {
         const cornersSquare = new QRCornerSquare({ context: canvasContext, type: options.cornersSquareOptions?.type });
 
@@ -416,22 +410,17 @@ export default class QRCanvas {
         }
       }
 
-      if (options.cornersSquareOptions?.gradient) {
-        const gradient = this._createGradient({
-          context: canvasContext,
-          options: options.cornersSquareOptions.gradient,
-          additionalRotation: rotation,
-          x,
-          y,
-          width: cornersSquareSize
-        });
-
-        canvasContext.fillStyle = canvasContext.strokeStyle = gradient;
-      } else if (options.cornersSquareOptions?.color) {
-        canvasContext.fillStyle = canvasContext.strokeStyle = options.cornersSquareOptions.color;
-      }
-
       canvasContext.fill("evenodd");
+
+      this._setColor({
+        color: options.cornersDotOptions?.color,
+        context: canvasContext,
+        options: options.cornersDotOptions?.gradient,
+        additionalRotation: rotation,
+        x: x + dotSize * 2,
+        y: y + dotSize * 2,
+        width: cornersDotSize
+      });
 
       if (options.cornersDotOptions?.type) {
         const cornersDot = new QRCornerDot({ context: canvasContext, type: options.cornersDotOptions?.type });
@@ -457,21 +446,6 @@ export default class QRCanvas {
             );
           }
         }
-      }
-
-      if (options.cornersDotOptions?.gradient) {
-        const gradient = this._createGradient({
-          context: canvasContext,
-          options: options.cornersDotOptions.gradient,
-          additionalRotation: rotation,
-          x: x + dotSize * 2,
-          y: y + dotSize * 2,
-          width: cornersDotSize
-        });
-
-        canvasContext.fillStyle = canvasContext.strokeStyle = gradient;
-      } else if (options.cornersDotOptions?.color) {
-        canvasContext.fillStyle = canvasContext.strokeStyle = options.cornersDotOptions.color;
       }
 
       canvasContext.fill("evenodd");
@@ -703,5 +677,29 @@ export default class QRCanvas {
     });
 
     return gradient;
+  }
+
+  _setColor({ color, options, context, stroke = true, ...gradientProps }: SetColorOptions): void {
+    let colorResult: CanvasGradient | string = "";
+
+    if (options) {
+      colorResult = this._createGradient({
+        context,
+        options,
+        ...gradientProps
+      });
+    } else if (color) {
+      colorResult = color;
+    }
+
+    if (!colorResult) {
+      return;
+    }
+
+    context.fillStyle = colorResult;
+
+    if (stroke) {
+      context.strokeStyle = colorResult;
+    }
   }
 }

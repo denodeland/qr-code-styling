@@ -162,3 +162,9 @@ export interface CreateGradientOptions {
   width: number;
   height?: number;
 }
+
+export interface SetColorOptions extends Omit<CreateGradientOptions, "options"> {
+  color?: string;
+  options?: Gradient;
+  stroke?: boolean;
+}

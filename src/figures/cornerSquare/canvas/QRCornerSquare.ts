@@ -1,5 +1,6 @@
 import cornerSquareTypes from "../../../constants/cornerSquareTypes";
 import { CornerSquareType } from "../../../types";
+import { buildPath } from "../utils";
 
 type DrawArgs = {
   x: number;
@@ -46,6 +47,20 @@ export default class QRCornerSquare {
         break;
       case cornerSquareTypes.extraRounded:
         drawFunction = this._drawExtraRounded;
+        break;
+      case cornerSquareTypes.shape1:
+      case cornerSquareTypes.shape2:
+      case cornerSquareTypes.shape3:
+      case cornerSquareTypes.shape4:
+      case cornerSquareTypes.shape5:
+      case cornerSquareTypes.shape6:
+      case cornerSquareTypes.shape7:
+      case cornerSquareTypes.shape8:
+      case cornerSquareTypes.shape9:
+      case cornerSquareTypes.shape10:
+      case cornerSquareTypes.shape11:
+      case cornerSquareTypes.shape12:
+        drawFunction = this._drawPath;
         break;
       case cornerSquareTypes.dot:
       default:
@@ -131,5 +146,10 @@ export default class QRCornerSquare {
 
   _drawExtraRounded({ x, y, size, context, rotation }: DrawArgs): void {
     this._basicExtraRounded({ x, y, size, context, rotation });
+  }
+
+  _drawPath({ x, y, size, context }: DrawArgs): void {
+    const path2D = new Path2D(buildPath({ type: this._type, size, x, y }));
+    context.fill(path2D);
   }
 }

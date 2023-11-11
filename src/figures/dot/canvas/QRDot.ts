@@ -1,5 +1,6 @@
 import dotTypes from "../../../constants/dotTypes";
 import { DotType } from "../../../types";
+import { buildPath } from "../utils";
 
 type GetNeighbor = (x: number, y: number) => boolean;
 type DrawArgs = {
@@ -56,6 +57,15 @@ export default class QRDot {
         break;
       case dotTypes.extraRounded:
         drawFunction = this._drawExtraRounded;
+        break;
+      case dotTypes.star:
+      case dotTypes.diamond:
+      case dotTypes.x:
+      case dotTypes.cross:
+      case dotTypes.crossRounded:
+      case dotTypes.xRounded:
+      case dotTypes.heart:
+        drawFunction = this._drawPath;
         break;
       case dotTypes.square:
       default:
@@ -328,5 +338,10 @@ export default class QRDot {
     }
 
     this._basicSquare({ x, y, size, context, rotation: 0 });
+  }
+
+  _drawPath({ x, y, size, context }: DrawArgs): void {
+    const path2D = new Path2D(buildPath({ type: this._type, size, x, y }));
+    context.fill(path2D);
   }
 }

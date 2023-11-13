@@ -56,4 +56,8 @@ const paths: { [key in string]: { path: string; size: number } } = {
   }
 };
 
+export const lazyPaths = {
+  [cornerDotTypes.square3]: () => import("./square3Path")
+};
+
 export default paths;

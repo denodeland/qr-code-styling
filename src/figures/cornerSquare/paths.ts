@@ -1,7 +1,9 @@
 import types from "../../constants/cornerSquareTypes";
 
+type Path = { path: string; size: number };
+
 // The paths must be in relative commands (lowercased letters) and unminified
-const paths: { [key in string]: { path: string; size: number } } = {
+const paths: { [key in string]: Path } = {
   [types.shape1]: {
     path: "m 21 1.9 l -21 -1.9 l 2 21 c 0 1.1 0.9 2 2 2 h 19 v -19.1 c 0 -1.1 -0.9 -2 -2 -2 z m -1.05 18.05 h -13.45 c -0.8 0 -1.45 -0.65 -1.45 -1.45 l -1.1 -14.5 l 14.55 1.05 c 0.8 0 1.45 0.65 1.45 1.44 v 13.46 z",
     size: 24
@@ -46,6 +48,10 @@ const paths: { [key in string]: { path: string; size: number } } = {
     path: "m 16.28 0 h -16.28 v 16.28 c 0 4.26 3.46 7.72 7.72 7.72 h 16.28 v -16.28 c 0 -4.26 -3.46 -7.72 -7.72 -7.72 z m 4.72 21 h -13.28 c -2.6 0 -4.72 -2.12 -4.72 -4.72 v -13.28 h 13.28 c 2.6 0 4.72 2.12 4.72 4.72 v 13.28 z",
     size: 24
   }
+};
+
+export const lazyPaths = {
+  [types.shape12]: (): Promise<{ default: Path }> => import("./shape12Path")
 };
 
 export default paths;

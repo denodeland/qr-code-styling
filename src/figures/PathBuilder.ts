@@ -1,16 +1,28 @@
-import cornerSquarePaths from "./cornerSquare/paths";
-import cornerDotPaths from "./cornerDot/paths";
+import cornerSquarePaths, { lazyPaths as cornerSquareLazyPaths } from "./cornerSquare/paths";
+import cornerDotPaths, { lazyPaths as cornerDotLazyPaths } from "./cornerDot/paths";
 import dotPaths from "./dot/paths";
 
-type Paths = { [key in string]: { path: string; size: number } };
-
+type Path = { path: string; size: number };
+type Paths = { [key in string]: Path };
+type LazyPath = Promise<{ default: Path }>;
 class PathBuilder {
   cachedPaths: { [key in string]: { [key in number]: string } } = {};
   cachedRelativePaths: { [key in string]: Array<string | number> } = {};
   paths: Paths;
+  lazyPaths: { [key in string]: () => LazyPath };
 
-  constructor(paths: Paths) {
+  constructor(paths: Paths, lazyPaths = {}) {
     this.paths = paths;
+    this.lazyPaths = lazyPaths;
+  }
+
+  async loadPath(type: string | undefined): Promise<void> {
+    if (!type || !this.lazyPaths[type] || this.paths[type]) {
+      return;
+    }
+
+    const response = await this.lazyPaths[type]();
+    this.paths[type] = response.default;
   }
 
   build({ type, size, x, y }: { type: string; size: number; x: number; y: number }): string {
@@ -50,8 +62,8 @@ class PathBuilder {
   }
 }
 
-export const cornerSquarePathBuilder = new PathBuilder(cornerSquarePaths);
-export const cornerDotPathBuilder = new PathBuilder(cornerDotPaths);
+export const cornerSquarePathBuilder = new PathBuilder(cornerSquarePaths, cornerSquareLazyPaths);
+export const cornerDotPathBuilder = new PathBuilder(cornerDotPaths, cornerDotLazyPaths);
 export const dotPathBuilder = new PathBuilder(dotPaths);
 
 export default PathBuilder;

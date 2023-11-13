@@ -169,7 +169,7 @@ export default class QRSVG {
 
       return true;
     });
-    this.drawCorners();
+    await this.drawCorners();
 
     if (this._options.image) {
       this.drawImage({ width: drawImageSize.width, height: drawImageSize.height, count, dotSize });
@@ -299,7 +299,7 @@ export default class QRSVG {
     }
   }
 
-  drawCorners(): void {
+  async drawCorners(): Promise<void> {
     if (!this._qr) {
       throw "QR code is not defined";
     }
@@ -321,6 +321,11 @@ export default class QRSVG {
       Math.floor(
         (options.height - options.frameOptions.topSize - options.frameOptions.bottomSize - count * dotSize) / 2
       ) + options.frameOptions.topSize;
+
+    await Promise.all([
+      QRCornerSquare.loadPath(options.cornersSquareOptions?.type),
+      QRCornerDot.loadPath(options.cornersDotOptions?.type)
+    ]);
 
     [
       [0, 0, 0],

@@ -29,6 +29,10 @@ export default class QRCornerDot {
   _svg: SVGElement;
   _type: CornerDotType;
 
+  static loadPath(type: string | undefined): Promise<void> {
+    return cornerDotPathBuilder.loadPath(type);
+  }
+
   constructor({ svg, type }: { svg: SVGElement; type: CornerDotType }) {
     this._svg = svg;
     this._type = type;

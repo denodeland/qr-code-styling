@@ -31,6 +31,10 @@ export default class QRCornerSquare {
   _context: CanvasRenderingContext2D;
   _type: CornerSquareType;
 
+  static loadPath(type: string | undefined): Promise<void> {
+    return cornerSquarePathBuilder.loadPath(type);
+  }
+
   constructor({ context, type }: { context: CanvasRenderingContext2D; type: CornerSquareType }) {
     this._context = context;
     this._type = type;

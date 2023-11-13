@@ -1,5 +1,6 @@
 import cornerDotTypes from "../../../constants/cornerDotTypes";
 import { CornerDotType } from "../../../types";
+import { cornerDotPathBuilder } from "../../PathBuilder";
 
 type DrawArgs = {
   x: number;
@@ -40,6 +41,22 @@ export default class QRCornerDot {
     switch (type) {
       case cornerDotTypes.square:
         drawFunction = this._drawSquare;
+        break;
+      case cornerDotTypes.rounded:
+      case cornerDotTypes.square2:
+      case cornerDotTypes.square3:
+      case cornerDotTypes.dot2:
+      case cornerDotTypes.dot3:
+      case cornerDotTypes.dot4:
+      case cornerDotTypes.sun:
+      case cornerDotTypes.star:
+      case cornerDotTypes.diamond:
+      case cornerDotTypes.x:
+      case cornerDotTypes.xRounded:
+      case cornerDotTypes.cross:
+      case cornerDotTypes.crossRounded:
+      case cornerDotTypes.heart:
+        drawFunction = this._drawPath;
         break;
       case cornerDotTypes.dot:
       default:
@@ -92,5 +109,10 @@ export default class QRCornerDot {
 
   _drawSquare({ x, y, size, rotation }: DrawArgs): void {
     this._basicSquare({ x, y, size, rotation });
+  }
+
+  _drawPath({ x, y, size }: DrawArgs): void {
+    this._element = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    this._element.setAttribute("d", cornerDotPathBuilder.build({ type: this._type, size, x, y }));
   }
 }

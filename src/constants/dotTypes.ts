@@ -13,5 +13,6 @@ export default {
   cross: "cross",
   crossRounded: "cross-rounded",
   xRounded: "x-rounded",
-  heart: "heart"
+  heart: "heart",
+  sparkle: "sparkle"
 } as DotTypes;

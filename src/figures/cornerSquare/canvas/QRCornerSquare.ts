@@ -1,6 +1,6 @@
 import cornerSquareTypes from "../../../constants/cornerSquareTypes";
 import { CornerSquareType } from "../../../types";
-import { buildPath } from "../utils";
+import { cornerSquarePathBuilder } from "../../PathBuilder";
 
 type DrawArgs = {
   x: number;
@@ -149,7 +149,7 @@ export default class QRCornerSquare {
   }
 
   _drawPath({ x, y, size, context }: DrawArgs): void {
-    const path2D = new Path2D(buildPath({ type: this._type, size, x, y }));
+    const path2D = new Path2D(cornerSquarePathBuilder.build({ type: this._type, size, x, y }));
     context.fill(path2D);
   }
 }

@@ -1,6 +1,6 @@
 import cornerSquareTypes from "../../../constants/cornerSquareTypes";
 import { CornerSquareType } from "../../../types";
-import { buildPath } from "../utils";
+import { cornerSquarePathBuilder } from "../../PathBuilder";
 
 type DrawArgs = {
   x: number;
@@ -172,6 +172,6 @@ export default class QRCornerSquare {
 
   _drawPath({ x, y, size }: DrawArgs): void {
     this._element = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    this._element.setAttribute("d", buildPath({ type: this._type, size, x, y }));
+    this._element.setAttribute("d", cornerSquarePathBuilder.build({ type: this._type, size, x, y }));
   }
 }

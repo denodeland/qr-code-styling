@@ -3,7 +3,7 @@ import types from "../../constants/cornerSquareTypes";
 // The paths must be in relative commands (lowercased letters) and unminified
 const paths: { [key in string]: { path: string; size: number } } = {
   [types.shape1]: {
-    path: "m 22 2 l -22 -2 l 2 22 c 0 1.1 0.9 2 2 2 h 20 v -20 c 0 -1.1 -0.9 -2 -2 -2 z m -1.05 18.95 h -14.45 c -0.8 0 -1.45 -0.65 -1.45 -1.45 l -1.1 -15.5 l 15.55 1.05 c 0.8 0 1.45 0.65 1.45 1.44 v 14.46 z",
+    path: "m 21 1.9 l -21 -1.9 l 2 21 c 0 1.1 0.9 2 2 2 h 19 v -19.1 c 0 -1.1 -0.9 -2 -2 -2 z m -1.05 18.05 h -13.45 c -0.8 0 -1.45 -0.65 -1.45 -1.45 l -1.1 -14.5 l 14.55 1.05 c 0.8 0 1.45 0.65 1.45 1.44 v 13.46 z",
     size: 24
   },
   [types.shape2]: {

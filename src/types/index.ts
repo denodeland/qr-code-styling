@@ -16,8 +16,25 @@ export type DotType =
   | "cross"
   | "cross-rounded"
   | "x-rounded"
+  | "heart"
+  | "sparkle";
+export type CornerDotType =
+  | "dot"
+  | "square"
+  | "rounded"
+  | "square2"
+  | "square3"
+  | "dot2"
+  | "dot3"
+  | "dot4"
+  | "sun"
+  | "star"
+  | "diamond"
+  | "x"
+  | "x-rounded"
+  | "cross"
+  | "cross-rounded"
   | "heart";
-export type CornerDotType = "dot" | "square";
 export type CornerSquareType =
   | "dot"
   | "square"

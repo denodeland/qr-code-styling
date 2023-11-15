@@ -198,13 +198,14 @@ export default class QRCanvas {
   drawFrameBackground(): void {
     const canvasContext = this.context;
     const options = this._options;
+    const { background } = options.frameOptions;
 
-    if (canvasContext && options.frameOptions.background) {
+    if (canvasContext && (background?.color || background?.gradient)) {
       this._setColor({
-        color: options.frameOptions.background.color,
+        color: background.color,
         stroke: false,
         context: canvasContext,
-        options: options.frameOptions.background.gradient,
+        options: background.gradient,
         additionalRotation: 0,
         x: 0,
         y: 0,

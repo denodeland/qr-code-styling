@@ -1,4 +1,7 @@
 import QRCodeStyling from "./core/QRCodeStyling";
+import dotPaths from "./figures/dot/paths";
+import cornerSquarePaths, { lazyPaths as cornerSquareLazyPaths } from "./figures/cornerSquare/paths";
+import cornerDotPaths, { lazyPaths as cornerDotLazyPaths } from "./figures/cornerDot/paths";
 import dotTypes from "./constants/dotTypes";
 import cornerDotTypes from "./constants/cornerDotTypes";
 import cornerSquareTypes from "./constants/cornerSquareTypes";
@@ -16,6 +19,11 @@ export {
   errorCorrectionPercents,
   modes,
   qrTypes,
-  drawTypes
+  drawTypes,
+  cornerSquarePaths,
+  cornerSquareLazyPaths,
+  cornerDotPaths,
+  cornerDotLazyPaths,
+  dotPaths
 };
 export default QRCodeStyling;

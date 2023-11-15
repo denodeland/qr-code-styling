@@ -11,8 +11,7 @@ module.exports = {
     path: libPath,
     filename: "qr-code-styling.js",
     library: "QRCodeStyling",
-    libraryTarget: "umd",
-    libraryExport: "default"
+    libraryTarget: "umd"
   },
   module: {
     rules: [

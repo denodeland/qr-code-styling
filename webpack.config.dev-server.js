@@ -14,5 +14,12 @@ module.exports = merge(commonConfig, {
       inject: "head",
       scriptLoading: "blocking"
     })
-  ]
+  ],
+  output: {
+    ...commonConfig.output,
+    libraryExport: "default"
+  },
+  module: {
+    rules: commonConfig.module.rules.filter((rule) => rule.loader !== "eslint-loader")
+  }
 });

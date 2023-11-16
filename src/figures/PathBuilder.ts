@@ -38,7 +38,6 @@ class PathBuilder {
       // build paths using relative sizes
       // e.g. ['m', 0.5, 1] multiplied by the size 24 is 'm 12 24'
       this.cachedRelativePaths[type] = SvgParser.parse(basePath.path, basePath.size);
-      console.log({ parsed: this.cachedRelativePaths[type] });
     }
 
     if (!cachedPathBySize[size]) {

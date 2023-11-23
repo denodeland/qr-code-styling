@@ -1,118 +1,98 @@
-import dotTypes from "../../../constants/dotTypes";
 import { DotType } from "../../../types";
 import { dotPathBuilder } from "../../PathBuilder";
+import QRDotBase, { BasicFigureDrawArgs, DrawArgs, RotateFigureArgs, RotateRectangleArgs } from "../QRDotBase";
 
-type GetNeighbor = (x: number, y: number) => boolean;
-type DrawArgs = {
-  x: number;
-  y: number;
-  size: number;
-  context: CanvasRenderingContext2D;
-  getNeighbor: GetNeighbor;
-};
-
-type BasicFigureDrawArgs = {
-  x: number;
-  y: number;
-  size: number;
-  context: CanvasRenderingContext2D;
-  rotation: number;
-};
-
-type RotateFigureArgs = {
-  x: number;
-  y: number;
-  size: number;
-  context: CanvasRenderingContext2D;
-  rotation: number;
-  draw: () => void;
-};
-
-export default class QRDot {
+export default class QRDot extends QRDotBase {
   _context: CanvasRenderingContext2D;
   _type: DotType;
 
   constructor({ context, type }: { context: CanvasRenderingContext2D; type: DotType }) {
+    super();
+
     this._context = context;
     this._type = type;
   }
 
-  draw(x: number, y: number, size: number, getNeighbor: GetNeighbor): void {
-    const context = this._context;
-    const type = this._type;
-    let drawFunction;
-
-    switch (type) {
-      case dotTypes.dots:
-        drawFunction = this._drawDot;
-        break;
-      case dotTypes.classy:
-        drawFunction = this._drawClassy;
-        break;
-      case dotTypes.classyRounded:
-        drawFunction = this._drawClassyRounded;
-        break;
-      case dotTypes.rounded:
-        drawFunction = this._drawRounded;
-        break;
-      case dotTypes.extraRounded:
-        drawFunction = this._drawExtraRounded;
-        break;
-      case dotTypes.star:
-      case dotTypes.diamond:
-      case dotTypes.x:
-      case dotTypes.cross:
-      case dotTypes.crossRounded:
-      case dotTypes.xRounded:
-      case dotTypes.heart:
-      case dotTypes.sparkle:
-        drawFunction = this._drawPath;
-        break;
-      case dotTypes.square:
-      default:
-        drawFunction = this._drawSquare;
-    }
-
-    drawFunction.call(this, { x, y, size, context, getNeighbor });
-  }
-
-  _rotateFigure({ x, y, size, context, rotation, draw }: RotateFigureArgs): void {
+  _rotateFigure({ x, y, size, rotation, draw }: RotateFigureArgs): void {
     const cx = x + size / 2;
     const cy = y + size / 2;
 
-    context.translate(cx, cy);
-    rotation && context.rotate(rotation);
+    this._context.translate(cx, cy);
+    rotation && this._context.rotate(rotation);
     draw();
-    context.closePath();
-    rotation && context.rotate(-rotation);
-    context.translate(-cx, -cy);
+    this._context.closePath();
+    rotation && this._context.rotate(-rotation);
+    this._context.translate(-cx, -cy);
+  }
+
+  _rotateRectangle({ x, y, xSize, ySize, rotation, draw }: RotateRectangleArgs): void {
+    const cx = Math.round(x + xSize / 2);
+    const cy = Math.round(y + ySize / 2);
+
+    this._context.translate(cx, cy);
+    rotation && this._context.rotate(rotation);
+    draw();
+    this._context.closePath();
+    rotation && this._context.rotate(-rotation);
+    this._context.translate(-cx, -cy);
   }
 
   _basicDot(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.arc(0, 0, size / 2, 0, Math.PI * 2);
+        this._context.arc(0, 0, size / 2, 0, Math.PI * 2);
+      }
+    });
+  }
+
+  _basicReducedDot(args: BasicFigureDrawArgs, baseSize: number): void {
+    const { size } = args;
+    const dotCenter = Math.round((baseSize - size) / 2);
+    const x = args.x + dotCenter;
+    const y = args.y + dotCenter;
+
+    this._rotateFigure({
+      ...args,
+      x,
+      y,
+      draw: () => {
+        this._context.arc(0, 0, size / 2, 0, Math.PI * 2);
       }
     });
   }
 
   _basicSquare(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.rect(-size / 2, -size / 2, size, size);
+        this._context.rect(-size / 2, -size / 2, size, size);
+      }
+    });
+  }
+
+  _basicReducedSquare(args: BasicFigureDrawArgs, baseSize: number): void {
+    const { size, x, y } = args;
+    const dotCenter = Math.round((baseSize - size) / 2);
+
+    this._rotateFigure({
+      ...args,
+      x,
+      y,
+      draw: () => {
+        this._context.rect(-size / 2 + dotCenter, -size / 2 + dotCenter, size, size);
       }
     });
   }
 
   //if rotation === 0 - right side is rounded
   _basicSideRounded(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
+    const context = this._context;
 
     this._rotateFigure({
       ...args,
@@ -125,224 +105,198 @@ export default class QRDot {
     });
   }
 
+  _reducedBasicSideRounded(args: BasicFigureDrawArgs, baseSize: number): void {
+    const { size, x, y, rotation } = args;
+    const context = this._context;
+    let xSize = size;
+    let ySize = size;
+
+    if (rotation === 0 || rotation === Math.PI) {
+      xSize = baseSize;
+      ySize = baseSize;
+    } else {
+      ySize = baseSize;
+    }
+
+    this._rotateRectangle({
+      x: x + Math.round((baseSize - size) / 2),
+      y,
+      xSize,
+      ySize,
+      rotation,
+      draw: () => {
+        context.arc(0, 0, size / 2, -Math.PI / 2, Math.PI / 2);
+        context.lineTo(-baseSize / 2, size / 2);
+        context.lineTo(-baseSize / 2, -size / 2);
+        context.lineTo(0, -size / 2);
+      }
+    });
+  }
+
   //if rotation === 0 - top right corner is rounded
   _basicCornerRounded(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.arc(0, 0, size / 2, -Math.PI / 2, 0);
-        context.lineTo(size / 2, size / 2);
-        context.lineTo(-size / 2, size / 2);
-        context.lineTo(-size / 2, -size / 2);
-        context.lineTo(0, -size / 2);
+        this._context.arc(0, 0, size / 2, -Math.PI / 2, 0);
+        this._context.lineTo(size / 2, size / 2);
+        this._context.lineTo(-size / 2, size / 2);
+        this._context.lineTo(-size / 2, -size / 2);
+        this._context.lineTo(0, -size / 2);
       }
     });
   }
 
   //if rotation === 0 - top right corner is rounded
   _basicCornerExtraRounded(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.arc(-size / 2, size / 2, size, -Math.PI / 2, 0);
-        context.lineTo(-size / 2, size / 2);
-        context.lineTo(-size / 2, -size / 2);
+        this._context.arc(-size / 2, size / 2, size, -Math.PI / 2, 0);
+        this._context.lineTo(-size / 2, size / 2);
+        this._context.lineTo(-size / 2, -size / 2);
       }
     });
   }
 
   _basicCornersRounded(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.arc(0, 0, size / 2, -Math.PI / 2, 0);
-        context.lineTo(size / 2, size / 2);
-        context.lineTo(0, size / 2);
-        context.arc(0, 0, size / 2, Math.PI / 2, Math.PI);
-        context.lineTo(-size / 2, -size / 2);
-        context.lineTo(0, -size / 2);
+        this._context.arc(0, 0, size / 2, -Math.PI / 2, 0);
+        this._context.lineTo(size / 2, size / 2);
+        this._context.lineTo(0, size / 2);
+        this._context.arc(0, 0, size / 2, Math.PI / 2, Math.PI);
+        this._context.lineTo(-size / 2, -size / 2);
+        this._context.lineTo(0, -size / 2);
       }
     });
   }
 
   _basicCornersExtraRounded(args: BasicFigureDrawArgs): void {
-    const { size, context } = args;
+    const { size } = args;
 
     this._rotateFigure({
       ...args,
       draw: () => {
-        context.arc(-size / 2, size / 2, size, -Math.PI / 2, 0);
-        context.arc(size / 2, -size / 2, size, Math.PI / 2, Math.PI);
+        this._context.arc(-size / 2, size / 2, size, -Math.PI / 2, 0);
+        this._context.arc(size / 2, -size / 2, size, Math.PI / 2, Math.PI);
       }
     });
   }
 
-  _drawDot({ x, y, size, context }: DrawArgs): void {
-    this._basicDot({ x, y, size, context, rotation: 0 });
-  }
+  _basicRectangle(args: { x: number; y: number; xSize: number; ySize: number }): void {
+    const { xSize, ySize } = args;
+    let { x, y } = args;
+    const context = this._context;
 
-  _drawSquare({ x, y, size, context }: DrawArgs): void {
-    this._basicSquare({ x, y, size, context, rotation: 0 });
-  }
-
-  _drawRounded({ x, y, size, context, getNeighbor }: DrawArgs): void {
-    const leftNeighbor = +getNeighbor(-1, 0);
-    const rightNeighbor = +getNeighbor(1, 0);
-    const topNeighbor = +getNeighbor(0, -1);
-    const bottomNeighbor = +getNeighbor(0, 1);
-
-    const neighborsCount = leftNeighbor + rightNeighbor + topNeighbor + bottomNeighbor;
-
-    if (neighborsCount === 0) {
-      this._basicDot({ x, y, size, context, rotation: 0 });
-      return;
+    if (xSize < ySize) {
+      x += Math.round((ySize - xSize) / 2);
+    } else {
+      x += Math.round((xSize - ySize) / 2);
+      y += Math.round((xSize - ySize) / 2);
     }
 
-    if (neighborsCount > 2 || (leftNeighbor && rightNeighbor) || (topNeighbor && bottomNeighbor)) {
-      this._basicSquare({ x, y, size, context, rotation: 0 });
-      return;
-    }
-
-    if (neighborsCount === 2) {
-      let rotation = 0;
-
-      if (leftNeighbor && topNeighbor) {
-        rotation = Math.PI / 2;
-      } else if (topNeighbor && rightNeighbor) {
-        rotation = Math.PI;
-      } else if (rightNeighbor && bottomNeighbor) {
-        rotation = -Math.PI / 2;
+    this._rotateRectangle({
+      x,
+      y,
+      xSize,
+      ySize,
+      rotation: 0,
+      draw() {
+        context.rect(-xSize / 2, -ySize / 2, xSize, ySize);
       }
+    });
+  }
 
-      this._basicCornerRounded({ x, y, size, context, rotation });
-      return;
-    }
+  _basicCornerRibbon(args: BasicFigureDrawArgs): void {
+    const { size } = args;
+    const context = this._context;
+    const halfSize = size / 2;
+    const x = -halfSize;
+    const y = -halfSize;
 
-    if (neighborsCount === 1) {
-      let rotation = 0;
-
-      if (topNeighbor) {
-        rotation = Math.PI / 2;
-      } else if (rightNeighbor) {
-        rotation = Math.PI;
-      } else if (bottomNeighbor) {
-        rotation = -Math.PI / 2;
+    this._rotateFigure({
+      ...args,
+      draw: () => {
+        context.lineTo(x, y);
+        context.lineTo(x + size, y);
+        context.lineTo(x + halfSize, y + halfSize);
+        context.lineTo(x + size, y + size);
+        context.lineTo(x, y + size);
       }
-
-      this._basicSideRounded({ x, y, size, context, rotation });
-      return;
-    }
+    });
   }
 
-  _drawExtraRounded({ x, y, size, context, getNeighbor }: DrawArgs): void {
-    const leftNeighbor = +getNeighbor(-1, 0);
-    const rightNeighbor = +getNeighbor(1, 0);
-    const topNeighbor = +getNeighbor(0, -1);
-    const bottomNeighbor = +getNeighbor(0, 1);
+  _basicDiamond(args: BasicFigureDrawArgs): void {
+    const { size } = args;
+    const context = this._context;
+    const halfSize = size / 2;
+    const x = 0;
+    const y = -halfSize;
 
-    const neighborsCount = leftNeighbor + rightNeighbor + topNeighbor + bottomNeighbor;
-
-    if (neighborsCount === 0) {
-      this._basicDot({ x, y, size, context, rotation: 0 });
-      return;
-    }
-
-    if (neighborsCount > 2 || (leftNeighbor && rightNeighbor) || (topNeighbor && bottomNeighbor)) {
-      this._basicSquare({ x, y, size, context, rotation: 0 });
-      return;
-    }
-
-    if (neighborsCount === 2) {
-      let rotation = 0;
-
-      if (leftNeighbor && topNeighbor) {
-        rotation = Math.PI / 2;
-      } else if (topNeighbor && rightNeighbor) {
-        rotation = Math.PI;
-      } else if (rightNeighbor && bottomNeighbor) {
-        rotation = -Math.PI / 2;
+    this._rotateFigure({
+      ...args,
+      draw: () => {
+        context.lineTo(x, y);
+        context.lineTo(x + halfSize, y + halfSize);
+        context.lineTo(x, y + size);
+        context.lineTo(x - halfSize, y + halfSize);
+        context.lineTo(x, y);
       }
+    });
+  }
 
-      this._basicCornerExtraRounded({ x, y, size, context, rotation });
-      return;
-    }
+  _basicSideDiamond(args: BasicFigureDrawArgs): void {
+    const { size } = args;
+    const context = this._context;
+    const halfSize = size / 2;
+    const x = -halfSize;
+    const y = -halfSize;
 
-    if (neighborsCount === 1) {
-      let rotation = 0;
-
-      if (topNeighbor) {
-        rotation = Math.PI / 2;
-      } else if (rightNeighbor) {
-        rotation = Math.PI;
-      } else if (bottomNeighbor) {
-        rotation = -Math.PI / 2;
+    this._rotateFigure({
+      ...args,
+      draw: () => {
+        // left top corner
+        context.lineTo(x, y);
+        context.lineTo(x + halfSize, y);
+        context.lineTo(x + size, y + halfSize);
+        context.lineTo(x + halfSize, y + size);
+        context.lineTo(x, y + size);
+        context.lineTo(x, y);
       }
-
-      this._basicSideRounded({ x, y, size, context, rotation });
-      return;
-    }
+    });
   }
 
-  _drawClassy({ x, y, size, context, getNeighbor }: DrawArgs): void {
-    const leftNeighbor = +getNeighbor(-1, 0);
-    const rightNeighbor = +getNeighbor(1, 0);
-    const topNeighbor = +getNeighbor(0, -1);
-    const bottomNeighbor = +getNeighbor(0, 1);
+  _basicCornerDiamond(args: BasicFigureDrawArgs): void {
+    const { size } = args;
+    const context = this._context;
+    const halfSize = size / 2;
+    const x = -halfSize;
+    const y = -halfSize;
 
-    const neighborsCount = leftNeighbor + rightNeighbor + topNeighbor + bottomNeighbor;
-
-    if (neighborsCount === 0) {
-      this._basicCornersRounded({ x, y, size, context, rotation: Math.PI / 2 });
-      return;
-    }
-
-    if (!leftNeighbor && !topNeighbor) {
-      this._basicCornerRounded({ x, y, size, context, rotation: -Math.PI / 2 });
-      return;
-    }
-
-    if (!rightNeighbor && !bottomNeighbor) {
-      this._basicCornerRounded({ x, y, size, context, rotation: Math.PI / 2 });
-      return;
-    }
-
-    this._basicSquare({ x, y, size, context, rotation: 0 });
+    this._rotateFigure({
+      ...args,
+      draw: () => {
+        // left top corner
+        context.lineTo(x, y);
+        context.lineTo(x + halfSize, y);
+        context.lineTo(x + size, y + halfSize);
+        context.lineTo(x + size, y + size);
+        context.lineTo(x, y + size);
+        context.lineTo(x, y);
+      }
+    });
   }
 
-  _drawClassyRounded({ x, y, size, context, getNeighbor }: DrawArgs): void {
-    const leftNeighbor = +getNeighbor(-1, 0);
-    const rightNeighbor = +getNeighbor(1, 0);
-    const topNeighbor = +getNeighbor(0, -1);
-    const bottomNeighbor = +getNeighbor(0, 1);
-
-    const neighborsCount = leftNeighbor + rightNeighbor + topNeighbor + bottomNeighbor;
-
-    if (neighborsCount === 0) {
-      this._basicCornersRounded({ x, y, size, context, rotation: Math.PI / 2 });
-      return;
-    }
-
-    if (!leftNeighbor && !topNeighbor) {
-      this._basicCornerExtraRounded({ x, y, size, context, rotation: -Math.PI / 2 });
-      return;
-    }
-
-    if (!rightNeighbor && !bottomNeighbor) {
-      this._basicCornerExtraRounded({ x, y, size, context, rotation: Math.PI / 2 });
-      return;
-    }
-
-    this._basicSquare({ x, y, size, context, rotation: 0 });
-  }
-
-  _drawPath({ x, y, size, context }: DrawArgs): void {
+  _drawPath({ x, y, size }: DrawArgs): void {
     const path2D = new Path2D(dotPathBuilder.build({ type: this._type, size, x, y }));
-    context.fill(path2D);
+    this._context.fill(path2D);
   }
 }

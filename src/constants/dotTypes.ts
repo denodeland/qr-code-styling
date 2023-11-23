@@ -7,6 +7,8 @@ export default {
   classyRounded: "classy-rounded",
   square: "square",
   extraRounded: "extra-rounded",
+  horizontalRounded: "horizontal-rounded",
+  verticalRounded: "vertical-rounded",
   star: "star",
   diamond: "diamond",
   x: "x",
@@ -14,5 +16,8 @@ export default {
   crossRounded: "cross-rounded",
   xRounded: "x-rounded",
   heart: "heart",
-  sparkle: "sparkle"
+  sparkle: "sparkle",
+  ribbon: "ribbon",
+  diamondSpecial: "diamond-special",
+  shake: "shake"
 } as DotTypes;

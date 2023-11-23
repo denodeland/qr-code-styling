@@ -10,6 +10,8 @@ export type DotType =
   | "classy-rounded"
   | "square"
   | "extra-rounded"
+  | "horizontal-rounded"
+  | "vertical-rounded"
   | "star"
   | "diamond"
   | "x"
@@ -17,7 +19,10 @@ export type DotType =
   | "cross-rounded"
   | "x-rounded"
   | "heart"
-  | "sparkle";
+  | "sparkle"
+  | "ribbon"
+  | "diamond-special"
+  | "shake";
 export type CornerDotType =
   | "dot"
   | "square"

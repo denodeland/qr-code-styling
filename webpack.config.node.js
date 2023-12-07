@@ -1,8 +1,11 @@
 const commonConfig = require("./webpack.config.common.js");
+
 const config = commonConfig;
 
 module.exports = (env, argv) => {
   config.mode = argv.mode;
+
+  config.output.libraryExport = "default";
 
   if (argv.mode === "development") {
     config.devtool = "inline-source-map";

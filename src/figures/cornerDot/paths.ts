@@ -1,4 +1,6 @@
 import cornerDotTypes from "../../constants/cornerDotTypes";
+// patch to import statically the path on build:node
+import square3Path from "./square3Path.static";
 
 type Path = { path: string; size: number };
 
@@ -59,7 +61,8 @@ const paths: { [key in string]: { path: string; size: number } } = {
 };
 
 export const lazyPaths = {
-  [cornerDotTypes.square3]: (): Promise<{ default: Path }> => import("./square3Path")
+  [cornerDotTypes.square3]: (): Promise<{ default: Path }> =>
+    square3Path ? Promise.resolve({ default: square3Path as Path }) : import("./square3Path")
 };
 
 export default paths;

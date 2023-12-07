@@ -1,4 +1,6 @@
 import types from "../../constants/cornerSquareTypes";
+// patch to import statically the path on build:node
+import shape12Path from "./shape12Path.static";
 
 type Path = { path: string; size: number };
 
@@ -51,7 +53,8 @@ const paths: { [key in string]: Path } = {
 };
 
 export const lazyPaths = {
-  [types.shape12]: (): Promise<{ default: Path }> => import("./shape12Path")
+  [types.shape12]: (): Promise<{ default: Path }> =>
+    shape12Path ? Promise.resolve({ default: shape12Path as Path }) : import("./shape12Path")
 };
 
 export default paths;

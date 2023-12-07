@@ -15,7 +15,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["webpack*"],
+      files: ["webpack*", "build-node.js"],
       rules: {
         "@typescript-eslint/no-var-requires": "off"
       }
